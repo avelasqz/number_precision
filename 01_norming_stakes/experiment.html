@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Language Experiment
+    </title><!--JS-->
+    <!-- external general utilities -->
+    <script src="shared/js/jquery-1.11.1.min.js"></script>
+    <script src="shared/full-projects/jquery-ui/jquery-ui.min.js"></script>
+    <script src="shared/js/underscore-min.js"></script>
+    
+    <!-- experiment logic -->
+    <script src="shared/js/exp-V2.js"></script>
+    <script src="shared/js/stream-V2.js"></script>
+
+    <!-- utilities to submit data to proliferate -->
+    <script src="https://proliferate.alps.science/static/js/proliferate.js"></script>
+
+    <!-- general utilities -->
+    <script src="shared/js/browserCheck.js"></script>
+    <script src="shared/js/utils.js"></script>
+    <link href="shared/full-projects/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css">
+    <link href="shared/css/cocolab-style.css" rel="stylesheet" type="text/css">
+    <link href="css/local-style.css" rel="stylesheet" type="text/css">
+
+    <!-- experiment file -->
+    <script src="js/experiment.js"></script>
+
+    <!-- stimulus file -->
+    <script src="js/stimuli.js"></script>
+  </head>
+
+  <body onload="init()">
+    <noscript>This task requires JavaScript.</noscript>
+    
+
+
+
+
+
+
+
+
+    <!-- initial slide -->
+    <div class="slide" id="i0">
+      <p class="left">
+        <br>
+        <br>
+        Welcome!
+        <br>
+        <br>
+        Thank you for participating. Please click <strong>start</strong> to begin.
+      </p>
+      <button id="start_button" type="button">Start</button>
+      <p class="left legal">
+        <strong><br>
+        <br>
+        <br>
+        LEGAL INFORMATION</strong>:<br>
+        <br>
+        We invite you to participate in a research study on language production and comprehension. Your experimenter will ask you to do a linguistic task such as reading sentences or words, naming pictures or describing scenes, making up sentences of your own, or participating in a simple language game.
+        <br>
+        <br>
+        There are no risks or benefits of any kind involved in this study.
+        <br>
+        <br>
+        You will be paid for your participation at the posted rate. If you have read this form and have decided to participate in this experiment, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled. You have the right to refuse to do particular tasks. Your individual privacy will be maintained in all published and written dataresulting from the study.
+        <br>
+        <br>
+        You may print this form for your records.
+        <br>
+        <br>
+        CONTACT INFORMATION: If you have any questions, concerns or complaints about this research study, its procedures, risks and benefits, you should contact the Protocol Director Meghan Sumner at (650)-725-9336.
+        <br>
+        <br>
+        If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at (650)-723-2480 or toll free at 1-866-680-2906. You can also write to the Stanford IRB, Stanford University, 3000 El Camino Real, Five Palo Alto Square, 4th Floor, Palo Alto, CA 94306 USA.
+        <br>
+        <br>
+        If you agree to participate, please proceed to the study tasks.
+      </p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- instruction slide -->
+    <div class="slide" id="instructions">
+      <p class="left">
+        <br>
+        <br>
+        On the following screen, you will be given a situation and asked to answer a question.
+      </p>
+      <div class="center">
+        <button id="continue_button" type="button" onclick="_s.button()">Continue</button>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <!-- trial slide -->
+    <div class="slide" id="trial">
+      <div class="left">
+        <br>
+        <br>
+        <p class="left">
+          <div class="prompt">
+            Please read the paragraph below.
+          </div>
+        </p>
+        <br>
+        <br>
+        <div class="context">
+        </div>
+        <br>
+        <br>
+        <div class="question">
+          </div>
+        </div>
+        <br>
+        <br>
+        <div class="left">
+          <div class="white_box"></div>
+          <div class="rangeslider">
+              <input type="range" list="tickmarks" min="-0" max="100" value="0" class="slider" id="importance">
+              <datalist class="tickmarks">
+              <option value="0"><span class="step_1">It wouldn't matter at all</span></option>
+              <option value="25"><span class="step_2">It wouldn't matter much</span></option>
+              <option value="50"><span class="step_3">It may or may not matter</span></option>
+              <option value="75"><span class="step_4">It would matter somewhat</span></option>
+              <option value="100"><span class="step_5">It would matter a lot</span></option>
+              </datalist>
+              <p><span id="import"></span></p>
+          </div>
+        </div>
+        <br>
+        <br>
+        <p class="center">
+          <button class="button" onclick="_s.button()">Continue</button>
+        </p>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- subject information slide -->
+    <div class="slide" id="subj_info">
+      <div class="long_form">
+        <div class="subj_info_title">
+          Additional information
+        </div>
+        <p class="info">
+          Answering these questions is optional, but will help us understand your answers.
+        </p>
+        <p>
+          Did you understand the task we asked you to complete?
+        </p><label><input type="radio" name="assess" value="No">No</label> <label><input type="radio" name="assess" value="Yes">Yes</label>
+        <p>
+          Gender: <select id="gender">
+            <option value="">
+            </option>
+            <option value="Male">
+              male
+            </option>
+            <option value="Female">
+              female
+            </option>
+            <option value="Other">
+              other
+            </option>
+          </select>
+        </p>
+        <p>
+          Age: <input type="text" id="age">
+        </p>
+        <p>
+          Level of education: <select id="education">
+            <option value="-1">
+            </option>
+            <option value="0">
+              Did not attend high school
+            </option>
+            <option value="1">
+              Some high school
+            </option>
+            <option value="2">
+              Graduated high school
+            </option>
+            <option value="3">
+              Some college
+            </option>
+            <option value="4">
+              Graduated college
+            </option>
+            <option value="5">
+              Hold a higher degree
+            </option>
+          </select>
+        </p>
+        <p>
+          What language(s) did you speak at home when you were a child?: <input type="text" id="language">
+        </p>
+        <p>
+          Do you think the payment was fair?
+        </p><select id="fairprice">
+          <option value="-1">
+          </option>
+          <option value="0">
+            The payment was too low
+          </option>
+          <option value="1">
+            The payment was fair
+          </option>
+        </select>
+        <p>
+          Did you enjoy the experiment?
+        </p><select id="enjoyment">
+          <option value="-1">
+          </option>
+          <option value="0">
+            Worse than the average experiment
+          </option>
+          <option value="1">
+            An average experiment
+          </option>
+          <option value="2">
+            Better than average experiment
+          </option>
+        </select>
+        <p>
+          We're interested in hearing your feedback on the experiment. Please type any comments here:
+        </p>
+        <textarea id="comments" rows="3" cols="50"></textarea><br>
+        <button onclick="_s.submit()">Submit</button>
+      </div>
+    </div>
+
+
+
+
+
+
+
+    <!-- final slide -->
+    <div id="thanks" class="slide js">
+      <p class="big">
+        Thanks for your time!
+      </p>
+    </div>
+
+
+
+
+
+
+    <!-- progress bar -->
+    <div class="progress">
+      <span>Progress:</span>
+      <div class="bar-wrapper">
+        <div class="bar" style="width: 0%"></div>
+      </div>
+    </div>
+  </body>
+</html>
