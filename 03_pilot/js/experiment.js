@@ -640,7 +640,7 @@ function make_slides(f) {
       _stream.apply(this);
     },
 
-    /*log_responses: function () {
+    log_responses: function () {
         exp.data_trials.push({
           "trial_number": exp.trial_number,
           "item": this.stim.item,
@@ -661,31 +661,10 @@ function make_slides(f) {
 
           "trial_time_minutes": (exp.endTrial - exp.startTrial) / 60000
         })
-    }*/
-
-
-    log_responses: function () {
-        exp.data_trials = {
-          "trial_number": exp.trial_number,
-          "item": this.stim.item,
-          "stakes": exp.stakes,
-          "bound": exp.bound,
-          "answer_number": exp.current_number,
-          "coin1": exp.coin1,
-          "coin2": exp.coin2,
-          "coin3": exp.coin3,
-          "coin4": exp.coin4,
-          "coin5": exp.coin5,
-          "coin6": exp.coin6,
-          "coin7": exp.coin7,
-          "coin8": exp.coin8,
-          "coin9": exp.coin9,
-          "coin10": exp.coin10,
-          "coin11": exp.coin11,
-
-          "trial_time_minutes": (exp.endTrial - exp.startTrial) / 60000
-        }
     }
+
+
+    
 
   });
 
@@ -778,7 +757,7 @@ function make_slides(f) {
     start: function() {
       exp.data = {
         "trials": exp.data_trials,
-        //"catch_trials": exp.catch_trials,
+        "catch_trials": exp.catch_trials,
         "system": exp.system,
         "attention_check": exp.check_answer,
         "subject_information": exp.subj_data,
@@ -868,7 +847,7 @@ function init() {
     "thanks"
   ];
 
-  //exp.data_trials = [];
+  exp.data_trials = [];
 
   //exp.check_answer = [];
 
