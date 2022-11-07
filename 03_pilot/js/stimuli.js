@@ -76,6 +76,6 @@ var all_stims =
   },
   {
     'item': 'party_low_lb',
-    'context': 'Lauren and Ben are hosting a party at their house. They want to have at least NUMLIMIT people so that people can spread out and talk in small groups. Lauren has heard from all the guests about whether they\'ll attend. Ben asks her, "How many people said they would come?"',
+    'context': 'Lauren and Ben are hosting a party at their house. They want to have at least NUMLIMIT people so that the atmosphere is right. Lauren has heard from all the guests about whether they\'ll attend. Ben asks her, "How many people said they would come?"',
     'answer': 'Lauren replies, "NUMBERUTT."'
   }]
