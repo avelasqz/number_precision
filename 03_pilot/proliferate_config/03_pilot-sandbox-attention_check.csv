@@ -1,0 +1,4 @@
+workerid,proliferate.condition,check_answer,check_check,error
+1530,condition1,a restaurant,False,
+1528,condition1,a house,True,
+1529,condition1,a sports field,False,

@@ -748,7 +748,7 @@ function make_slides(f) {
     start: function() {
       exp.data = {
         "trials": exp.data_trials,
-        "catch_trials": exp.catch_trials,
+        //"catch_trials": exp.catch_trials,
         "system": exp.system,
         "attention_check": exp.check_answer,
         "subject_information": exp.subj_data,
