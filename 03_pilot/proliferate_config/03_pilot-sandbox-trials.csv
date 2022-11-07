@@ -1,4 +1,2 @@
 workerid,proliferate.condition,answer_number,bound,coin1,coin10,coin11,coin2,coin3,coin4,coin5,coin6,coin7,coin8,coin9,item,stakes,trial_number,trial_time_minutes,error
-1530,condition1,twenty-five,upper,1,4,5,2,2,1,1,1,1,1,1,game_night_low_ub,low,1,0.5355833333333333,
-1528,condition1,twenty-five,lower,0,0,0,0,0,0,0,12,6,2,0,game_night_low_lb,low,1,0.38405,
-1529,condition1,twenty-five,upper,0,0,0,0,0,0,8,12,0,0,0,game_night_low_ub,low,1,0.31446666666666667,
+1528,condition1,twenty-five,lower,0,0,0,0,0,0,0,20,0,0,0,dinner_out_low_lb,low,1,0.27166666666666667,
