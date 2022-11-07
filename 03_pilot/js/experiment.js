@@ -704,10 +704,14 @@ function make_slides(f) {
 
     log_responses: function(text) {
       //exp.check_answer.push({
-      exp.data_trials.push({
+      //exp.data_trials.push({
+        //"check_answer": text,
+        //"check_check": exp.correct_answer == text
+      //})
+      exp.check_answer = {
         "check_answer": text,
         "check_check": exp.correct_answer == text
-      })
+      }
     }
   });
 
@@ -751,7 +755,7 @@ function make_slides(f) {
         "trials": exp.data_trials,
         "catch_trials": exp.catch_trials,
         "system": exp.system,
-        //"attention_check": exp.check_answer,
+        "attention_check": exp.check_answer,
         "subject_information": exp.subj_data,
         "time_in_minutes": (Date.now() - exp.startT) / 60000
       };
@@ -841,7 +845,7 @@ function init() {
 
   exp.data_trials = [];
 
-  exp.check_answer = [];
+  //exp.check_answer = [];
 
   //make corresponding slides:
   exp.slides = make_slides(exp);
