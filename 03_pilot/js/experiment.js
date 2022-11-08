@@ -155,7 +155,7 @@ function make_slides(f) {
 
       exp.answer = stim.answer.replace("NUMBERUTT", exp.current_utt);
       $(".answer").html(exp.answer);
-      console.log("answer:", exp.answer);
+      //console.log("answer:", exp.answer);
 
       if(exp.item.includes("gettogether")) {
         exp.correct_answer = "a park"
@@ -164,7 +164,7 @@ function make_slides(f) {
       } else {
         exp.correct_answer = "a house"
       }
-      console.log("correct answer:", exp.correct_answer)
+      //console.log("correct answer:", exp.correct_answer)
       
 
       // $('.prompt').show();
