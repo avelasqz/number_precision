@@ -75,6 +75,17 @@ function make_slides(f) {
       exp.startTrial = Date.now();
       $(".coin").attr("src", "./images/coins_0.png");
       $("#trial_continue_button").attr("disabled", "disabled");
+      $("#c_coin-1").attr("src", "./images/c_count0.png");
+      $("#c_coin-2").attr("src", "./images/c_count0.png");
+      $("#c_coin-3").attr("src", "./images/c_count0.png");
+      $("#c_coin-4").attr("src", "./images/c_count0.png");
+      $("#c_coin-5").attr("src", "./images/c_count0.png");
+      $("#c_coin-6").attr("src", "./images/c_count0.png");
+      $("#c_coin-7").attr("src", "./images/c_count0.png");
+      $("#c_coin-8").attr("src", "./images/c_count0.png");
+      $("#c_coin-9").attr("src", "./images/c_count0.png");
+      $("#c_coin-10").attr("src", "./images/c_count0.png");
+      $("#c_coin-11").attr("src", "./images/c_count0.png");
     
       //tallyCoins();
 
@@ -156,18 +167,22 @@ function make_slides(f) {
       console.log("correct answer:", exp.correct_answer)
       
 
+      // $('.prompt').show();
+      // $('.context').show();
+      // setTimeout(function() {
+      //   $('.answer').show();
+      //   setTimeout(function() {
+      //    $('.question').show();
+      //    $('#coinfunction').show();
+      //    $('#available-coins').show();
+      //    $('#trial_continue_button').show();
+      //    $('.button').show();
+      //  }, 1000)
+      //  }, 10000)
+
       $('.prompt').show();
       $('.context').show();
-      setTimeout(function() {
-        $('.answer').show();
-        setTimeout(function() {
-         $('.question').show();
-         $('#coinfunction').show();
-         $('#available-coins').show();
-         $('#trial_continue_button').show();
-         $('.button').show();
-       }, 1000)
-       }, 10000)
+      $('.answer').show();
 
     },
 
@@ -190,6 +205,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin1_img = './images/c_count' + exp.coin1 + '.png';
+      $("#c_coin-1").attr("src", c_coin1_img);
     },
 
     button_plus1: function(response) {
@@ -211,6 +228,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       };
+      c_coin1_img = './images/c_count' + exp.coin1 + '.png';
+      $("#c_coin-1").attr("src", c_coin1_img);
     },
 
     button_minus2: function(response) {
@@ -232,6 +251,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin2_img = './images/c_count' + exp.coin2 + '.png';
+      $("#c_coin-2").attr("src", c_coin2_img);
     },
 
     button_plus2: function(response) {
@@ -253,6 +274,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin2_img = './images/c_count' + exp.coin2 + '.png';
+      $("#c_coin-2").attr("src", c_coin2_img);
     },
 
     button_minus3: function(response) {
@@ -274,6 +297,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin3_img = './images/c_count' + exp.coin3 + '.png';
+      $("#c_coin-3").attr("src", c_coin3_img);
     },
 
     button_plus3: function(response) {
@@ -294,8 +319,9 @@ function make_slides(f) {
         } else {
         $("#trial_continue_button").attr("disabled", null);
       };
-
       }
+      c_coin3_img = './images/c_count' + exp.coin3 + '.png';
+      $("#c_coin-3").attr("src", c_coin3_img);
     },
 
     button_minus4: function(response) {
@@ -317,6 +343,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin4_img = './images/c_count' + exp.coin4 + '.png';
+      $("#c_coin-4").attr("src", c_coin4_img);
     },
 
     button_plus4: function(response) {
@@ -338,6 +366,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin4_img = './images/c_count' + exp.coin4 + '.png';
+      $("#c_coin-4").attr("src", c_coin4_img);
     },
 
     button_minus5: function(response) {
@@ -359,6 +389,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin5_img = './images/c_count' + exp.coin5 + '.png';
+      $("#c_coin-5").attr("src", c_coin5_img);
     },
 
     button_plus5: function(response) {
@@ -380,6 +412,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin5_img = './images/c_count' + exp.coin5 + '.png';
+      $("#c_coin-5").attr("src", c_coin5_img);
     },
 
     button_minus6: function(response) {
@@ -401,6 +435,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin6_img = './images/c_count' + exp.coin6 + '.png';
+      $("#c_coin-6").attr("src", c_coin6_img);
     },
 
     button_plus6: function(response) {
@@ -422,6 +458,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
       };
       }
+      c_coin6_img = './images/c_count' + exp.coin6 + '.png';
+      $("#c_coin-6").attr("src", c_coin6_img);
     },
 
     button_minus7: function(response) {
@@ -443,6 +481,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin7_img = './images/c_count' + exp.coin7 + '.png';
+      $("#c_coin-7").attr("src", c_coin7_img);
     },
 
     button_plus7: function(response) {
@@ -464,6 +504,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin7_img = './images/c_count' + exp.coin7 + '.png';
+      $("#c_coin-7").attr("src", c_coin7_img);
     },
 
     button_minus8: function(response) {
@@ -485,6 +527,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin8_img = './images/c_count' + exp.coin8 + '.png';
+      $("#c_coin-8").attr("src", c_coin8_img);
     },
 
     button_plus8: function(response) {
@@ -506,6 +550,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin8_img = './images/c_count' + exp.coin8 + '.png';
+      $("#c_coin-8").attr("src", c_coin8_img);
     },
 
     button_minus9: function(response) {
@@ -527,6 +573,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin9_img = './images/c_count' + exp.coin9 + '.png';
+      $("#c_coin-9").attr("src", c_coin9_img);
     },
 
     button_plus9: function(response) {
@@ -548,6 +596,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin9_img = './images/c_count' + exp.coin9 + '.png';
+      $("#c_coin-9").attr("src", c_coin9_img);
     },
 
     button_minus10: function(response) {
@@ -569,6 +619,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin10_img = './images/c_count' + exp.coin10 + '.png';
+      $("#c_coin-10").attr("src", c_coin10_img);
     },
 
     button_plus10: function(response) {
@@ -590,6 +642,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin10_img = './images/c_count' + exp.coin10 + '.png';
+      $("#c_coin-10").attr("src", c_coin10_img);
     },
 
     button_minus11: function(response) {
@@ -611,6 +665,8 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin11_img = './images/c_count' + exp.coin11 + '.png';
+      $("#c_coin-11").attr("src", c_coin11_img);
     },
 
     button_plus11: function(response) {
@@ -632,6 +688,17 @@ function make_slides(f) {
         $("#trial_continue_button").attr("disabled", null);
         }
       }
+      c_coin11_img = './images/c_count' + exp.coin11 + '.png';
+      $("#c_coin-11").attr("src", c_coin11_img);
+    },
+
+    button_coins: function() {
+      exp.clickCoins = Date.now();
+      $('.question').show();
+      $('#coinfunction').show();
+      $('#available-coins').show();
+      $('#trial_continue_button').show();
+      $('.button').show();
     },
 
     button_trial: function() {
@@ -658,7 +725,7 @@ function make_slides(f) {
           "coin_i": exp.coin9,
           "coin_j": exp.coin10,
           "coin_k": exp.coin11,
-
+          "read_time_minutes": (exp.clickCoins - exp.startTrial) / 60000,
           "trial_time_minutes": (exp.endTrial - exp.startTrial) / 60000
         })
     }
