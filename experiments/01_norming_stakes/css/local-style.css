@@ -1,0 +1,206 @@
+.slider {
+   /*default is width 400 and margin 10 */
+	-webkit-appearance: none; /*override default CSS styles*/
+  appearance: none;
+  border-radius: 5px;
+  width: 780px;
+	margin: 10px;
+  background: #d3d3d3; /*gray background*/
+  outline: none;
+  opacity:  0.7; /*set transparency for mouse-over effects on hover*/
+  -webkit-transition: .2s; /*0.2 second transition on hover*/
+  transition: opacity .2s;
+  height:  10px;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    cursor: pointer;
+    background: midnightblue;
+    width: 1%;
+    height: 20px;
+
+}
+
+input.range:focus {
+  outline: 0;
+}
+input.range::-moz-focus-outer {
+  border: 0;
+}
+
+.hidden {
+    display: none; }
+
+.unhidden {
+    display: block; }
+
+.arcButton {
+    background-color: white; /* Green */
+    border: none;
+    color: black;
+    padding: 3px 0px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 22px;
+    margin: 0px 0px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+.arcButton:hover{
+    background-color:#f44336; /*Green*/
+}
+
+.instruction{
+    color:#424242;
+    text-align: justify;
+    font-size: 17px;
+    padding-top: 0.5cm;
+    padding-bottom: 0.5cm;
+
+}
+.targetSen{
+    color:#2E9AFE;
+}
+
+.notBoth{
+    color: red;
+    font-size:22;
+}
+
+.originalSen {
+	color: #E7532B;
+}
+
+.targetSen, .originalSen {
+	text-align:left;
+	font-size:20;
+}
+
+.row {
+    padding-bottom: .5em;
+}
+
+
+.tr {
+  padding: 0;
+  text-align: left;
+}
+.retryButton{
+    font-color: black;
+    padding: 1px 8px;
+
+}
+.retryButton:hover{
+    background-color: #f44336;
+    padding: 1px 8px;
+}
+.continueButton{
+    padding: 1px 8px;
+}
+
+.continueButton:hover{
+   background-color: #008CBA;
+   padding: 1px 8px;
+}
+.slider_table {
+   margin-left: 0;
+   text-align: left;
+   padding-top: 0cm;
+   padding-bottom: 1cm;
+}
+
+.radio_buttons {
+   margin-left: 0;
+   text-align: left;
+   padding-top: 0cm;
+   padding-bottom: 1cm;
+}
+
+.input[type=radio] {
+    margin: 0;
+      display: block;
+}
+
+table.likertscale  {
+  /*border: 1px solid black;*/
+  text-align: center;
+  width: 90%;
+  align-self: left;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+tr,td {
+/*  border: 1px solid black;*/
+}
+
+td:nth-child(1) {
+ width: 200px
+}
+
+td:nth-child(9) {
+ width: 200px
+}
+
+.left {
+	font-size: 80%;
+  text-align: left;
+}
+
+.center {
+	font-size: 80%;
+  text-align: center;
+}
+
+.right {
+	font-size: 80%;
+  text-align: right;
+}
+
+
+.legal {
+	font-size: 70%;
+	font-style: italic;
+}
+
+.bold {
+  font-style: bold;
+}
+
+.slide {
+	border: 1px solid #666;
+  padding-bottom: 2cm;
+}
+
+td.structureleft {
+  font-size: 80%;
+  width: 500px;
+}
+
+td.structureright {
+  font-size: 80%;
+  width: 400px;
+  padding-right: 10px;
+}
+
+datalist {
+  display: flex;
+  justify-content: space-between;
+  font-size: 80%;
+  color: black;
+  width: 100%;
+}
+
+/*input {
+  width: 50%;
+}
+*/
+
