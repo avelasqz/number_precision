@@ -6,32 +6,6 @@ var REPETITIONS = 1;
 
 var first_catch_trial = true;
 
-function tallyCoins() {
-  var total = $(".coin").map(function() {
-    return parseInt($(this).attr("src").split("coins_")[1].replace(".png", ""));
-  })
-  .get()
-  .reduce(function(acc, val) {
-    return acc + val;
-  });
-  if (total == MAX_COINS) {
-    $(".control").each(function() {
-      if ($(this).val() != "+") return;
-      $(this).attr("disabled", "disabled");
-    });
-    $("#trial_continue_button").attr("disabled", null);
-  } else {
-    $(".control").each(function() {
-      if ($(this).val() != "+") return;
-      $(this).attr("disabled", null);
-    });
-    $("#trial_continue_button").attr("disabled", "disabled");
-  }
-  $("#available-coins").attr("src", "./images/coins_" + (MAX_COINS-total) + ".png");
-};
-
-
-
 // set up experiment logic for each slide
 function make_slides(f) {
   var slides = {};
@@ -86,8 +60,6 @@ function make_slides(f) {
       $("#c_coin-9").attr("src", "./images/c_count0.png");
       $("#c_coin-10").attr("src", "./images/c_count0.png");
       $("#c_coin-11").attr("src", "./images/c_count0.png");
-    
-      //tallyCoins();
 
       $(".err").hide();
       $('.prompt').hide();
@@ -157,12 +129,14 @@ function make_slides(f) {
       $(".answer").html(exp.answer);
       //console.log("answer:", exp.answer);
 
-      if(exp.item.includes("gettogether")) {
-        exp.correct_answer = "a park"
-      } else if(exp.item.includes("dinner_out")) {
-        exp.correct_answer = "a restaurant"
+      if(exp.item.includes("trivia")) {
+        exp.correct_answer = "a dorm"
+      } else if(exp.item.includes("gamenight")) {
+        exp.correct_answer = "a senior center"
+      } else if(exp.item.includes("extras")) {
+        exp.correct_answer = "a film set"
       } else {
-        exp.correct_answer = "a house"
+        exp.correct_answer = "a school"
       }
       //console.log("correct answer:", exp.correct_answer)
       
@@ -850,7 +824,7 @@ function init() {
   
 
 
-  exp.stims = _.shuffle(["gettogether_low_nb", "gettogether_low_lb", "gettogether_high_lb", "gettogether_low_ub", "gettogether_high_ub", "dinner_out_low_nb", "dinner_out_low_lb", "dinner_out_high_lb", "dinner_out_low_ub", "dinner_out_high_ub", "game_night_low_nb", "game_night_low_lb", "game_night_low_ub", "party_low_nb", "party_low_lb", "party_low_ub"])
+  exp.stims = _.shuffle(["gamenight_agn_lb", "gamenight_agn_ub"])
 
   exp.stim_label = exp.stims.shift();
   console.log("context:", exp.stim_label)
@@ -887,7 +861,7 @@ function init() {
   exp.utts = _.shuffle(["twenty-five"])
   console.log("utt_order:", exp.utts)
 
-  exp.check = _.shuffle(["a house", "a restaurant", "a park", "a bar", "a bookstore", "an arena", "a gym", "a sports field", "a museum", "an office"])
+  exp.check = _.shuffle(["a school", "a restaurant", "a park", "a dorm", "a bookstore", "a senior center", "a gym", "a sports field", "a museum", "a film set"])
   
   exp.trial_number = 0
 
