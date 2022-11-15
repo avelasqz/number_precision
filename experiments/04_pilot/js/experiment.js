@@ -101,8 +101,10 @@ function make_slides(f) {
 
       if (exp.item.includes("high")) {
         exp.stakes = "high"
-      } else {
+      } else if (exp.item.includes("low")) {
         exp.stakes = "low"
+      } else {
+        exp.stakes = "agnostic"
       };
       console.log("stakes:", exp.stakes)
 
@@ -830,7 +832,7 @@ function init() {
   console.log("context:", exp.stim_label)
 
   exp.stim = all_stims.find(stim => stim.item == exp.stim_label)
-  console.log("stim:", exp.stim)
+  //console.log("stim:", exp.stim)
 
 // on this array method and others: https://www.digitalocean.com/community/tutorials/js-array-search-methods
 
