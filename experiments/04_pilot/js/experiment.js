@@ -824,7 +824,7 @@ function init() {
   
 
 
-  exp.stims = _.shuffle(["gamenight_agn_lb", "gamenight_agn_ub"])
+  exp.stims = _.shuffle(["gamenight_agn_ub", "gamenight_agn_lb"])
 
   exp.stim_label = exp.stims.shift();
   console.log("context:", exp.stim_label)
