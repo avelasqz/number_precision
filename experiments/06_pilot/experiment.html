@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Number Experiment
+    </title><!--JS-->
+    <!-- external general utilities -->
+    <script src="shared/js/jquery-1.11.1.min.js"></script>
+    <script src="shared/full-projects/jquery-ui/jquery-ui.min.js"></script>
+    <script src="shared/js/underscore-min.js"></script>
+    
+    <!-- experiment logic -->
+    <script src="shared/js/exp-V2.js"></script>
+    <script src="shared/js/stream-V2.js"></script>
+
+    <!-- utilities to submit data to proliferate -->
+    <script src="https://proliferate.alps.science/static/js/proliferate.js"></script>
+
+    <!-- general utilities -->
+    <script src="shared/js/browserCheck.js"></script>
+    <script src="shared/js/utils.js"></script>
+    <link href="shared/full-projects/jquery-ui/jquery-ui.min.css" rel="stylesheet" type="text/css">
+    <link href="shared/css/cocolab-style.css" rel="stylesheet" type="text/css">
+    <link href="css/local-style.css" rel="stylesheet" type="text/css">
+
+    <!-- experiment file -->
+    <script src="js/experiment.js"></script>
+
+    <!-- stimulus file -->
+    <script src="js/stimuli.js"></script>
+  </head>
+
+  <body onload="init()">
+    <noscript>This task requires JavaScript.</noscript>
+    
+
+
+
+
+
+
+
+
+    <!-- initial slide -->
+    <div class="slide" id="i0">
+      <p class="left">
+        <br>
+        <br>
+        Welcome!
+        <br>
+        <br>
+        Thank you for participating. Please click <strong>start</strong> to begin.
+      </p>
+      <button id="start_button" type="button">Start</button>
+      <p class="left legal">
+        <strong><br>
+        <br>
+        <br>
+        LEGAL INFORMATION</strong>:<br>
+        <br>
+        We invite you to participate in a research study on language production and comprehension. Your experimenter will ask you to do a linguistic task such as reading sentences or words, naming pictures or describing scenes, making up sentences of your own, or participating in a simple language game.
+        <br>
+        <br>
+        There are no risks or benefits of any kind involved in this study.
+        <br>
+        <br>
+        You will be paid for your participation at the posted rate. If you have read this form and have decided to participate in this experiment, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled. You have the right to refuse to do particular tasks. Your individual privacy will be maintained in all published and written dataresulting from the study.
+        <br>
+        <br>
+        You may print this form for your records.
+        <br>
+        <br>
+        CONTACT INFORMATION: If you have any questions, concerns or complaints about this research study, its procedures, risks and benefits, you should contact the Protocol Director Meghan Sumner at (650)-725-9336.
+        <br>
+        <br>
+        If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at (650)-723-2480 or toll free at 1-866-680-2906. You can also write to the Stanford IRB, Stanford University, 3000 El Camino Real, Five Palo Alto Square, 4th Floor, Palo Alto, CA 94306 USA.
+        <br>
+        <br>
+        If you agree to participate, please proceed to the study tasks.
+      </p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- instruction slide -->
+    <div class="slide" id="instructions">
+      <h3>Instructions</h3> 
+      <p class="left">
+        <br>
+        <br>
+        You will be asked to read a situation, and play a short betting game related to what you read. There are two people in the situation. One asks a question, and the other responds. The person who responds may be giving an exact number, or may be approximating.
+        <br>
+        <br>
+        Your task is to bet on the actual precise number based on the person's response. Bet on the different options based on how certain you are that each is the actual one. Putting more coins on a number means that you believe that number is more likely.
+        <br>
+        <br>
+        You guess by distributing all 20 coins across the different numbers by using the <strong>–</strong> and <strong>+</strong> buttons provided.
+      </p>
+      <div class="center">
+        <button id="continue_button" type="button" onclick="_s.button()">Continue</button>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <!-- trial slide -->
+    <div class="slide" id="trial">
+      <div class="left">
+        <br>
+        <br>
+        <p class="left">
+          <div class="prompt">
+            <em>Please read the paragraph below.</em>
+          </div>
+        </p>
+        <br>
+        <div class="context">
+        </div>
+        <br>
+        <div class="answer">
+        </div>
+        <br>
+        <br>
+        <div class="center">
+        <input type="button" id="coin_button" onclick="_s.button_coins()" class="button_coins" value="Ready to bet!">
+        </div>
+        <br>
+        <br>
+        <div class="question">
+          The speaker's response may be exact, or they may be approximating. <strong>How many people do you think said they would come?</strong>
+        </div>
+        </div>
+        <br>
+        <p class="err"> Please distribute all 20 coins!</p>
+          <table class="center2" id="coinfunction" style="margin-left: 60px" table-layout="fixed">
+          <tr>
+            <td style="padding-bottom:20px;" class="col-1" width='100%'><img id="value-img-1" src="./images/20.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-2" width='100%'><img id="value-img-2" src="./images/21.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-3" width='100%'><img id="value-img-3" src="./images/22.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-4" width='100%'><img id="value-img-4" src="./images/23.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-5" width='100%'><img id="value-img-5" src="./images/24.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-6" width='100%'><img id="value-img-6" src="./images/25.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-7" width='100%'><img id="value-img-7" src="./images/26.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-8" width='100%'><img id="value-img-8" src="./images/27.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-9" width='100%'><img id="value-img-9" src="./images/28.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-10" width='100%'><img id="value-img-10" src="./images/29.png" width="58" height="58" /></td>
+            <td style="padding-bottom:20px;" class="col-11" width='100%'><img id="value-img-11" src="./images/30.png" width="58" height="58" /></td>
+          </tr>
+
+          <tr>
+            <td style="opacity: 1" class="col-1" width='100%'>
+                <img id="coins-1" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-2" width='100%'>
+                <img id="coins-2" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-3" width='100%'>
+                <img id="coins-3" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-4" width='100%'>
+                <img id="coins-4" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-5" width='100%'>
+                <img id="coins-5" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-6" width='100%'>
+                <img id="coins-6" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-7" width='100%'>
+                <img id="coins-7" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-8" width='100%'>
+                <img id="coins-8" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-9" width='100%'>
+                <img id="coins-9" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-10" width='100%'>
+                <img id="coins-10" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="col-11" width='100%'>
+                <img id="coins-11" class="coin" src="./images/coins_0.png" width="50" height="30">
+            </td>
+          </tr>
+
+          <tr>
+            <td style="opacity: 1" class="col-1" width='100%'>
+                <input type="button" class="button_minus1" data-machine="1" onclick="_s.button_minus1()" value="&ndash;"> 
+                <input type="button" class="button_plus1" data-machine="1" onclick="_s.button_plus1()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-2" width='100%'>
+                <input type="button" class="button_minus2" data-machine="2" onclick="_s.button_minus2()" value="&ndash;"> 
+                <input type="button" class="button_plus2" data-machine="2" onclick="_s.button_plus2()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-3" width='100%'>
+                <input type="button" class="button_minus3" data-machine="3" onclick="_s.button_minus3()" value="&ndash;"> 
+                <input type="button" class="button_plus3" data-machine="3" onclick="_s.button_plus3()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-4" width='100%'>
+                <input type="button" class="button_minus4" data-machine="4" onclick="_s.button_minus4()" value="&ndash;"> 
+                <input type="button" class="button_plus4" data-machine="4" onclick="_s.button_plus4()" value="+">  
+            </td>
+            <td style="opacity: 1" class="col-5" width='100%'>
+                <input type="button" class="button_minus5" data-machine="5" onclick="_s.button_minus5()" value="&ndash;"> 
+                <input type="button" class="button_plus5" data-machine="5" onclick="_s.button_plus5()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-6" width='100%'>
+                <input type="button" class="button_minus6" data-machine="6" onclick="_s.button_minus6()" value="&ndash;"> 
+                <input type="button" class="button_plus1" data-machine="6" onclick="_s.button_plus6()" value="+">  
+            </td>
+            <td style="opacity: 1" class="col-7" width='100%'>
+                <input type="button" class="button_minus7" data-machine="7" onclick="_s.button_minus7()" value="&ndash;"> 
+                <input type="button" class="button_plus7" data-machine="7" onclick="_s.button_plus7()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-8" width='100%'>
+                <input type="button" class="button_minus8" data-machine="8" onclick="_s.button_minus8()" value="&ndash;"> 
+                <input type="button" class="button_plus8" data-machine="8" onclick="_s.button_plus8()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-9" width='100%'>
+                <input type="button" class="button_minus9" data-machine="9" onclick="_s.button_minus9()" value="&ndash;"> 
+                <input type="button" class="button_plus9" data-machine="9" onclick="_s.button_plus9()" value="+">  
+            </td>
+            <td style="opacity: 1" class="col-10" width='100%'>
+                <input type="button" class="button_minus10" data-machine="10" onclick="_s.button_minus10()" value="&ndash;"> 
+                <input type="button" class="button_plus10" data-machine="10" onclick="_s.button_plus10()" value="+"> 
+            </td>
+            <td style="opacity: 1" class="col-11" width='100%'>
+                <input type="button" class="button_minus11" data-machine="11" onclick="_s.button_minus11()" value="&ndash;"> 
+                <input type="button" class="button_plus11" data-machine="11" onclick="_s.button_plus11()" value="+">  
+            </td>
+          </tr>
+          <tr>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-1" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-2" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-3" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-4" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-5" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-6" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-7" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-8" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-9" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-10" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+            <td style="opacity: 1" class="c_col" width='100%'>
+                <img id="c_coin-11" class="coin" src="./images/c_count0.png" width="50" height="30">
+            </td>
+          </tr>
+        </table>
+        <div style="padding: 20px 0;" id="available-coins">
+          <p style="width:145px; float: left; margin: 5px 0 0 0;">Available coins:</p> <img id = "avail-coins-img" src="./images/coins_20.png" width="50" height="30" style="float:left;display: block;">
+        </div>
+        <br>
+        <div>
+        <input type="button" id="trial_continue_button" onclick="_s.button_trial()" class="button_trial" value="Continue">
+        </div>
+      </div>
+
+
+
+
+
+
+    <!-- attention check slide -->
+    <div class="slide" id="attention_check">
+      <div class="long_form">
+        <p>
+          Which place was mentioned in the situation you read about?
+          <br>
+          <br>
+          <select id="check_answer">
+            <option id="op1" value="op1">op1</option>
+            <option id="op2" value="op2">op2</option>
+            <option id="op3" value="op3">op3</option>
+            <option id="op4" value="op4">op4</option>
+            <option id="op5" value="op5">op5</option>
+            <option id="op6" value="op6">op6</option>
+            <option id="op7" value="op7">op7</option>
+            <option id="op8" value="op8">op8</option>
+            <option id="op9" value="op9">op9</option>
+            <option id="op10" value="op10">op10</option>
+          </select>
+        </p>
+        <br>
+        <br>
+        <button onclick="_s.button_check()">Continue</button>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+    <!-- subject information slide -->
+    <div class="slide" id="subj_info">
+      <div class="long_form">
+        <div class="subj_info_title">
+          Additional information
+        </div>
+        <p class="info">
+          Answering these questions is optional, but will help us understand your answers.
+        </p>
+        <p>
+          Did you understand the task we asked you to complete?
+        </p><label><input type="radio" name="assess" value="No">No</label> <label><input type="radio" name="assess" value="Yes">Yes</label>
+        <p>
+          Gender: <select id="gender">
+            <option value="">
+            </option>
+            <option value="Male">
+              male
+            </option>
+            <option value="Female">
+              female
+            </option>
+            <option value="non-binary">
+              non-binary
+            </option>
+            <option value="prefer-noanswer">
+              prefer not to answer
+            </option>
+          </select>
+        </p>
+        <p>
+          Age: <input type="text" id="age">
+        </p>
+        <p>
+          Level of education: <select id="education">
+            <option value="-1">
+            </option>
+            <option value="0">
+              Did not attend high school
+            </option>
+            <option value="1">
+              Some high school
+            </option>
+            <option value="2">
+              Graduated high school
+            </option>
+            <option value="3">
+              Some college
+            </option>
+            <option value="4">
+              Graduated college
+            </option>
+            <option value="5">
+              Hold a higher degree
+            </option>
+          </select>
+        </p>
+        <p>
+          What language(s) did you speak at home when you were a child?: <input type="text" id="language">
+        </p>
+        <p>
+          Do you think the payment was fair?
+        </p><select id="fairprice">
+          <option value="-1">
+          </option>
+          <option value="0">
+            The payment was too low
+          </option>
+          <option value="1">
+            The payment was fair
+          </option>
+        </select>
+        <p>
+          Did you enjoy the experiment?
+        </p><select id="enjoyment">
+          <option value="-1">
+          </option>
+          <option value="0">
+            Worse than the average experiment
+          </option>
+          <option value="1">
+            An average experiment
+          </option>
+          <option value="2">
+            Better than average experiment
+          </option>
+        </select>
+        <p>
+          We're interested in hearing your feedback on the experiment. Please type any comments here:
+        </p>
+        <textarea id="comments" rows="3" cols="50"></textarea><br>
+        <button onclick="_s.submit()">Submit</button>
+      </div>
+    </div>
+
+
+
+
+
+
+
+    <!-- final slide -->
+    <div id="thanks" class="slide js">
+      <p class="big">
+        Thanks for your time!
+      </p>
+    </div>
+
+
+
+
+
+
+    <!-- progress bar -->
+    <div class="progress">
+      <span>Progress:</span>
+      <div class="bar-wrapper">
+        <div class="bar" style="width: 0%"></div>
+      </div>
+    </div>
+  </body>
+</html>
