@@ -64,8 +64,9 @@ function make_slides(f) {
       $(".err").hide();
       $('.prompt').hide();
       $('.context').hide();
-      $('.question').hide();
       $('.answer').hide();
+      $('.question').hide();
+      $('.bet_prompt').hide();
       $('#coinfunction').hide();
       $('#available-coins').hide();
       $('#trial_continue_button').hide();
@@ -121,20 +122,42 @@ function make_slides(f) {
       console.log("limit number:", exp.current_number);
 
       if (exp.item == 'gamenight_agn_ub') {
-        exp.key_sent = 'Rachel and Neil are assistants at a senior center, and are in charge of hosting a game night for their residents. For the game they plan on playing, they need NUMLIMIT residents or less. Rachel has heard from all the residents about whether they\'ll attend. Neil asks her, "How many people said they would come?"';
-        exp.bold_sent = 'For the game they plan on playing, they need NUMLIMIT residents or less.';
+        exp.bold_sent = 'They need NUMLIMIT residents or less.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'gamenight_agn_lb') {
+        exp.bold_sent = 'They need NUMLIMIT residents or more.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'trivianight_agn_ub') {
+        exp.bold_sent = 'They need NUMLIMIT residents or more.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'trivianight_agn_lb') {
+        exp.bold_sent = 'They need NUMLIMIT residents or more.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'extras_agn_ub') {
+        exp.bold_sent = 'They need NUMLIMIT extras or less.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'extras_agn_lb') {
+        exp.bold_sent = 'They need NUMLIMIT extras or more.';
+        exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
+        $(".context").html(exp.context);
+      } else if (exp.item == 'chorus_agn_ub') {
+        exp.bold_sent = 'They need NUMLIMIT students or less.';
         exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
         $(".context").html(exp.context);
       } else {
-        exp.key_sent = 'Rachel and Neil are assistants at a senior center, and are in charge of hosting a game night for their residents. For the game they plan on playing, they need NUMLIMIT residents or more. Rachel has heard from all the residents about whether they\'ll attend. Neil asks her, "How many people said they would come?"';
-        exp.bold_sent = 'For the game they plan on playing, they need NUMLIMIT residents or more.';
+        exp.bold_sent = 'They need NUMLIMIT students or more.';
         exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
         $(".context").html(exp.context);
       }
 
       exp.context = exp.context.replace("NUMLIMIT", exp.current_number);
       $(".context").html(exp.context);
-      console.log("context:", exp.context);
+      //console.log("context:", exp.context);
 
       exp.current_utt = exp.utts.shift();
       console.log("utterance number:", exp.current_utt);
@@ -142,6 +165,13 @@ function make_slides(f) {
       exp.answer = stim.answer.replace("NUMBERUTT", exp.current_utt);
       $(".answer").html(exp.answer);
       //console.log("answer:", exp.answer);
+
+
+      exp.prompt = '<b>' + stim.bet_prompt + '</b>';
+      $('.bet_prompt').html(exp.prompt);
+      //console.log("prompt:", exp.prompt);
+
+
 
       if(exp.item.includes("trivia")) {
         exp.correct_answer = "a dorm"
@@ -683,6 +713,7 @@ function make_slides(f) {
     button_coins: function() {
       exp.clickCoins = Date.now();
       $('.question').show();
+      $('.bet_prompt').show();
       $('#coinfunction').show();
       $('#available-coins').show();
       $('#trial_continue_button').show();
@@ -737,7 +768,7 @@ function make_slides(f) {
     // present: exp.check,
     start : function(loc) {
       this.loc = loc
-      console.log("check option order:", exp.check);
+      //console.log("check option order:", exp.check);
       // exp.option1 == exp.check.shift();
       // $('#op1').attr('value', exp.option1)
       document.getElementById('op1').textContent = exp.check.pop();
@@ -838,7 +869,7 @@ function init() {
   
 
 
-  exp.stims = _.shuffle(["gamenight_agn_ub", "gamenight_agn_lb"])
+  exp.stims = _.shuffle(["gamenight_agn_ub", "gamenight_agn_lb", "trivianight_agn_ub", "trivianight_agn_lb", "extras_agn_ub", "extras_agn_lb", "chorus_agn_ub", "chorus_agn_lb"])
 
   exp.stim_label = exp.stims.shift();
   console.log("context:", exp.stim_label)
