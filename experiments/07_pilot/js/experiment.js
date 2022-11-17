@@ -180,7 +180,7 @@ function make_slides(f) {
       } else if(exp.item.includes("extras")) {
         exp.correct_answer = "a film set"
       } else {
-        exp.correct_answer = "a school"
+        exp.correct_answer = "a high school"
       }
       //console.log("correct answer:", exp.correct_answer)
       
