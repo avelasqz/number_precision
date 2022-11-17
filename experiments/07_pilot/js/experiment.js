@@ -906,7 +906,7 @@ function init() {
   exp.utts = _.shuffle(["twenty-five"])
   console.log("utt_order:", exp.utts)
 
-  exp.check = _.shuffle(["a school", "a restaurant", "a park", "a dorm", "a bookstore", "a senior center", "a gym", "a sports field", "a museum", "a film set"])
+  exp.check = _.shuffle(["a high school", "a restaurant", "a park", "a dorm", "a bookstore", "a senior center", "a gym", "a sports field", "a museum", "a film set"])
   
   exp.trial_number = 0
 
