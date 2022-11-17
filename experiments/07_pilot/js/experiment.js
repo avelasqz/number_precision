@@ -130,7 +130,7 @@ function make_slides(f) {
         exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
         $(".context").html(exp.context);
       } else if (exp.item == 'trivianight_agn_ub') {
-        exp.bold_sent = 'They need NUMLIMIT residents or more.';
+        exp.bold_sent = 'They need NUMLIMIT residents or less.';
         exp.context = stim.context.replace(exp.bold_sent, '<b>' + exp.bold_sent + '</b>');
         $(".context").html(exp.context);
       } else if (exp.item == 'trivianight_agn_lb') {
