@@ -1,0 +1,166 @@
+var utterances = ["not-twenty-five","twenty-five"];
+
+var utterancePrior = function() { return uniformDraw(utterances) };
+
+var states = _.range(20, 31);
+
+var statePrior = function() { return uniformDraw(states) };
+
+var costeven = function(utterance){
+  utterance == "null" ? 0 :
+  1
+};
+
+var smallcosts = function(utterance) {
+  utterance == "not-twenty-five" ? 1.5 :
+  utterance == "twenty-five" ? 1.0 :
+  0
+};
+
+//utterance-specific alpha values
+
+var nouttalphas = {
+  "not-twenty-five" : 0,
+  "twenty-five" : 0
+};
+
+var alluttalphas = {
+  "not-twenty-five" : 1,
+  "twenty-five" : 1
+};
+
+var rounduttalphas = {
+  "not-twenty-five" : 3,
+  "twenty-five" : 1
+};
+
+var nohalos = {
+  "not-twenty-five" : 0,
+  "twenty-five" : 0
+};
+
+var allhalos = {
+  "not-twenty-five" : 1,
+  "twenty-five" : 1
+};
+
+var roundhalos = {
+  "not-twenty-five" : 0,
+  "twenty-five" : 1
+};
+
+//The new parameter--like a quasi-alpha, or a peri-alpha:
+//Using this, we make alpha a sort of overall imprecision parameter, and give each
+//number expression its own imprecision sensitivity.
+
+var noimp = {
+  "not-twenty-five" : 10.0,
+  "twenty-five" : 10.0
+};
+
+var allimp = {
+  "not-twenty-five" : 1.0,
+  "twenty-five" : 1.0
+};
+
+var roundimp = {
+  "not-twenty-five" : 10.0,
+  "twenty-five" : 1.0
+};
+
+var lowerMeanings = {
+  "not-twenty-five" : function(state) { return state <= 24; },
+  "twenty-five" : function(state) { return state >= 25; }
+};
+
+var upperMeanings = {
+  "not-twenty-five" : function(state) { return state >= 26; },
+  "twenty-five" : function(state) { return state <= 25; }
+};
+
+var followsthat = function(exp1, exp2, meanings) {
+  if(meanings == lowerMeanings){
+    var f = lowerMeanings[exp1]
+    var g = lowerMeanings[exp2]
+    var m = function() {
+      var s = statePrior()
+      //add the desired assumption:
+      condition(f(s))
+      return {'follows': g(s)}
+    }
+    var dist = Infer({}, m)
+    return dist
+  } else {
+    var f = upperMeanings[exp1]
+    var g = upperMeanings[exp2]
+    var m = function() {
+      var s = statePrior()
+      //add the desired assumption:
+      condition(f(s))
+      return {'follows': g(s)}
+    };
+    var dist = Infer({}, m)
+    return dist 
+  }
+};
+
+var literalListener = cache(function(utt,meanings) {
+  return Infer({model: function(){
+    var state = statePrior()
+    var meaning = meanings[utt]
+    condition(meaning(state))
+    return state
+  }})
+})
+
+// pragmatic speaker
+var speaker = cache(function(state,meanings) {
+  return Infer({model: function(){
+    var utt = utterancePrior()
+    factor(literalListener(utt,meanings).score(state))
+    return utt;
+  }})
+});
+
+var partialTruth = cache(function(utt,meanings){
+  var meaning = meanings[utt]
+  var consistentWorlds = Infer(function(){
+    var state = statePrior()
+    condition(meaning(state))
+    return state
+  })
+  return Infer({model: function(){
+    var uttprime = utterancePrior()
+    var state = sample(consistentWorlds)
+    condition(Math.exp(followsthat(uttprime, utt, meanings).score({"follows": true}))==1)
+    condition(Math.exp(followsthat(utt, uttprime, meanings).score({"follows": true}))!=1)
+    factor(speaker(state,meanings).score(uttprime))
+    return uttprime;
+  }})
+});
+
+var impSpeaker = cache(function(state,alpha,beta,gamma,uttalphas,halos,meanings,cost) { 
+  return Infer(function() {
+    var utt = utterancePrior()
+    var uttprime = utterancePrior()
+    var uttprimeMeaning = meanings[uttprime]
+    condition(uttprimeMeaning(state))
+    var speakerProb = Math.exp(speaker(state,meanings).score(utt))
+    //if (false) {
+    if(20 <= state <= 30) {
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb)-cost(utt)))
+    } else {
+      var partialTruthProb = halos[utt] * Math.exp(partialTruth(uttprime,meanings,cost).score(utt))
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb + beta * partialTruthProb)-cost(utt)))
+    }
+    return(utt)
+  })
+});
+
+var pragmaticListener = function(utterance,alpha,beta,gamma,uttalphas,halos,meanings,cost){
+  Infer({model: function(){
+    var state = statePrior()
+    observe(impSpeaker(state,alpha,beta,gamma,uttalphas,halos,meanings,cost),utterance)
+    return state
+  }})
+};

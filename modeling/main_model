@@ -1,0 +1,382 @@
+var utterances = ["twenty","twenty-one","twenty-two","twenty-three","twenty-four","twenty-five","twenty-six","twenty-seven","twenty-eight","twenty-nine", "thirty"];
+
+var utterancePrior = function() { return uniformDraw(utterances) };
+
+var states = _.range(20, 31);
+
+var statePrior = function() { return uniformDraw(states) };
+
+var costeven = function(utterance){
+  utterance == "null" ? 0 :
+  1
+};
+
+var costdiff = function(utterance) {
+  utterance == "twenty" ? 0.2 :
+  utterance == "twenty-one" ? 2.6 :
+  utterance == "twenty-two" ? 2.6 :
+  utterance == "twenty-three" ? 3.1 :
+  utterance == "twenty-four" ? 1.9 :
+  utterance == "twenty-five" ? 1.0 :
+  utterance == "twenty-six" ? 3.9 :
+  utterance == "twenty-seven" ? 4.4 :
+  utterance == "twenty-eight" ? 4.4 :
+  utterance == "twenty-nine" ? 5.6 :
+  utterance == "thirty" ? 0.4 :
+  0
+};
+
+var smallcosts = function(utterance) {
+  utterance == "twenty" ? 1.0 :
+  utterance == "twenty-one" ? 1.5 :
+  utterance == "twenty-two" ? 1.5 :
+  utterance == "twenty-three" ? 1.5 :
+  utterance == "twenty-four" ? 1.5 :
+  utterance == "twenty-five" ? 1.0 :
+  utterance == "twenty-six" ? 1.5 :
+  utterance == "twenty-seven" ? 1.5 :
+  utterance == "twenty-eight" ? 1.5 :
+  utterance == "twenty-nine" ? 1.5 :
+  utterance == "thirty" ? 1.0 :
+  0
+};
+
+var v_smallcosts = function(utterance) {
+  utterance == "twenty" ? 1.0 :
+  utterance == "twenty-one" ? 1.1 :
+  utterance == "twenty-two" ? 1.1 :
+  utterance == "twenty-three" ? 1.1 :
+  utterance == "twenty-four" ? 1.1 :
+  utterance == "twenty-five" ? 1.0 :
+  utterance == "twenty-six" ? 1.1 :
+  utterance == "twenty-seven" ? 1.1 :
+  utterance == "twenty-eight" ? 1.1 :
+  utterance == "twenty-nine" ? 1.1 :
+  utterance == "thirty" ? 1.0 :
+  0
+};
+
+var avgcost = function(utterance) {
+  utterance == "twenty" ? 0.3 :
+  utterance == "twenty-one" ? 3.6 :
+  utterance == "twenty-two" ? 3.6 :
+  utterance == "twenty-three" ? 3.6 :
+  utterance == "twenty-four" ? 3.6 :
+  utterance == "twenty-five" ? 1.0 :
+  utterance == "twenty-six" ? 3.6 :
+  utterance == "twenty-seven" ? 3.6 :
+  utterance == "twenty-eight" ? 3.6 :
+  utterance == "twenty-nine" ? 3.6 :
+  utterance == "thirty" ? 0.3 :
+  0
+};
+
+var bigcosts = function(utterance) {
+  utterance == "twenty" ? 0.1 :
+  utterance == "twenty-one" ? 100 :
+  utterance == "twenty-two" ? 100 :
+  utterance == "twenty-three" ? 100 :
+  utterance == "twenty-four" ? 100 :
+  utterance == "twenty-five" ? 0.1 :
+  utterance == "twenty-six" ? 100 :
+  utterance == "twenty-seven" ? 100 :
+  utterance == "twenty-eight" ? 100 :
+  utterance == "twenty-nine" ? 100 :
+  utterance == "thirty" ? 0.1 :
+  0
+};
+
+//utterance-specific alpha values
+
+var nouttalphas = {
+  "twenty" : 0,
+  "twenty-one" : 0,
+  "twenty-two" : 0,
+  "twenty-three" : 0,
+  "twenty-four" : 0,
+  "twenty-five" : 0,
+  "twenty-six" : 0,
+  "twenty-seven" : 0,
+  "twenty-eight" : 0,
+  "twenty-nine" : 0,
+  "thirty" : 0
+};
+
+var lowuttalphas = {
+  "twenty" : 1,
+  "twenty-one" : 1,
+  "twenty-two" : 1,
+  "twenty-three" : 1,
+  "twenty-four" : 1,
+  "twenty-five" : 1,
+  "twenty-six" : 1,
+  "twenty-seven" : 1,
+  "twenty-eight" : 1,
+  "twenty-nine" : 1,
+  "thirty" : 1
+};
+
+var highuttalphas = {
+  "twenty" : 3,
+  "twenty-one" : 3,
+  "twenty-two" : 3,
+  "twenty-three" : 3,
+  "twenty-four" : 3,
+  "twenty-five" : 3,
+  "twenty-six" : 3,
+  "twenty-seven" : 3,
+  "twenty-eight" : 3,
+  "twenty-nine" : 3,
+  "thirty" : 3
+};
+
+var rounduttalphas = {
+  "twenty" : 1,
+  "twenty-one" : 3,
+  "twenty-two" : 3,
+  "twenty-three" : 3,
+  "twenty-four" : 3,
+  "twenty-five" : 1,
+  "twenty-six" : 3,
+  "twenty-seven" : 3,
+  "twenty-eight" : 3,
+  "twenty-nine" : 3,
+  "thirty" : 1
+};
+
+//utterance-specific beta values
+
+var nohalos = {
+  "twenty" : 0,
+  "twenty-one" : 0,
+  "twenty-two" : 0,
+  "twenty-three" : 0,
+  "twenty-four" : 0,
+  "twenty-five" : 0,
+  "twenty-six" : 0,
+  "twenty-seven" : 0,
+  "twenty-eight" : 0,
+  "twenty-nine" : 0,
+  "thirty" : 0
+};
+
+var allhalos = {
+  "twenty" : 1,
+  "twenty-one" : 1,
+  "twenty-two" : 1,
+  "twenty-three" : 1,
+  "twenty-four" : 1,
+  "twenty-five" : 1,
+  "twenty-six" : 1,
+  "twenty-seven" : 1,
+  "twenty-eight" : 1,
+  "twenty-nine" : 1,
+  "thirty" : 1
+};
+
+var roundhalos = {
+  "twenty" : 1,
+  "twenty-one" : 0,
+  "twenty-two" : 0,
+  "twenty-three" : 0,
+  "twenty-four" : 0,
+  "twenty-five" : 1,
+  "twenty-six" : 0,
+  "twenty-seven" : 0,
+  "twenty-eight" : 0,
+  "twenty-nine" : 0,
+  "thirty" : 1
+};
+
+var r_v_shalos = {
+  "twenty" : 1,
+  "twenty-one" : 0.5,
+  "twenty-two" : 0.5,
+  "twenty-three" : 0.5,
+  "twenty-four" : 0.5,
+  "twenty-five" : 1,
+  "twenty-six" : 0.5,
+  "twenty-seven" : 0.5,
+  "twenty-eight" : 0.5,
+  "twenty-nine" : 0.5,
+  "thirty" : 1
+};
+
+//utterance-specific gamma values--like a quasi-alpha, or a peri-alpha:
+//Using this, we make alpha a sort of overall imprecision parameter, and give each
+//number expression its own imprecision sensitivity.
+
+var noimp = {
+  "twenty" : 10.0,
+  "twenty-one" : 10.0,
+  "twenty-two" : 10.0,
+  "twenty-three" : 10.0,
+  "twenty-four" : 10.0,
+  "twenty-five" : 10.0,
+  "twenty-six" : 10.0,
+  "twenty-seven" : 10.0,
+  "twenty-eight" : 10.0,
+  "twenty-nine" : 10.0,
+  "thirty" : 10.0
+};
+
+var allimp = {
+  "twenty" : 1.0,
+  "twenty-one" : 1.0,
+  "twenty-two" : 1.0,
+  "twenty-three" : 1.0,
+  "twenty-four" : 1.0,
+  "twenty-five" : 1.0,
+  "twenty-six" : 1.0,
+  "twenty-seven" : 1.0,
+  "twenty-eight" : 1.0,
+  "twenty-nine" : 1.0,
+  "thirty" : 1.0
+};
+
+var roundimp = {
+  "twenty" : 1.0,
+  "twenty-one" : 10.0,
+  "twenty-two" : 10.0,
+  "twenty-three" : 10.0,
+  "twenty-four" : 10.0,
+  "twenty-five" : 1.0,
+  "twenty-six" : 10.0,
+  "twenty-seven" : 10.0,
+  "twenty-eight" : 10.0,
+  "twenty-nine" : 10.0,
+  "thirty" : 1.0
+};
+
+var lowerMeanings = {
+  "twenty" : function(state) { return state >= 20; },
+  "twenty-one" : function(state) { return state >= 21; },
+  "twenty-two" : function(state) { return state >= 22; },
+  "twenty-three" : function(state) { return state >= 23; },
+  "twenty-four" : function(state) { return state >= 24; },
+  "twenty-five" : function(state) { return state >= 25; },
+  "twenty-six" : function(state) { return state >= 26; },
+  "twenty-seven" : function(state) { return state >= 27; },
+  "twenty-eight" : function(state) { return state >= 28; },
+  "twenty-nine" : function(state) { return state >= 29; },
+  "thirty" : function(state) { return state >= 30; },
+};
+
+var upperMeanings = {
+  "twenty" : function(state) { return state <= 20; },
+  "twenty-one" : function(state) { return state <= 21; },
+  "twenty-two" : function(state) { return state <= 22; },
+  "twenty-three" : function(state) { return state <= 23; },
+  "twenty-four" : function(state) { return state <= 24; },
+  "twenty-five" : function(state) { return state <= 25; },
+  "twenty-six" : function(state) { return state <= 26; },
+  "twenty-seven" : function(state) { return state <= 27; },
+  "twenty-eight" : function(state) { return state <= 28; },
+  "twenty-nine" : function(state) { return state <= 29; },
+  "thirty" : function(state) { return state <= 30},
+};
+
+var exactMeanings = {
+  "twenty" : function(state) { return state == 20; },
+  "twenty-one" : function(state) { return state == 21; },
+  "twenty-two" : function(state) { return state == 22; },
+  "twenty-three" : function(state) { return state == 23; },
+  "twenty-four" : function(state) { return state == 24; },
+  "twenty-five" : function(state) { return state == 25; },
+  "twenty-six" : function(state) { return state == 26; },
+  "twenty-seven" : function(state) { return state == 27; },
+  "twenty-eight" : function(state) { return state == 28; },
+  "twenty-nine" : function(state) { return state == 29; },
+  "thirty" : function(state) { return state == 30},
+};
+
+var followsthat = function(exp1, exp2, meanings) {
+  if(meanings == lowerMeanings){
+    var f = lowerMeanings[exp1]
+    var g = lowerMeanings[exp2]
+    var m = function() {
+      var s = statePrior()
+      //add the desired assumption:
+      condition(f(s))
+      return {'follows': g(s)}
+    }
+    var dist = Infer({}, m)
+    return dist
+  } else {
+    var f = upperMeanings[exp1]
+    var g = upperMeanings[exp2]
+    var m = function() {
+      var s = statePrior()
+      //add the desired assumption:
+      condition(f(s))
+      return {'follows': g(s)}
+    };
+    var dist = Infer({}, m)
+    return dist 
+  }
+};
+
+var literalListener = cache(function(utt,meanings) {
+  return Infer({model: function(){
+    var state = statePrior()
+    var meaning = meanings[utt]
+    condition(meaning(state))
+    return state
+  }})
+})
+
+// pragmatic speaker
+var speaker = cache(function(state,meanings) {
+  return Infer({model: function(){
+    var utt = utterancePrior()
+    factor(literalListener(utt,meanings).score(state))
+    return utt;
+  }})
+});
+
+var partialTruth = cache(function(utt,meanings){
+  var meaning = meanings[utt]
+  var consistentWorlds = Infer(function(){
+    var state = statePrior()
+    condition(meaning(state))
+    return state
+  })
+  return Infer({model: function(){
+    var uttprime = utterancePrior()
+    var state = sample(consistentWorlds)
+    condition(Math.exp(followsthat(uttprime, utt, meanings).score({"follows": true}))==1)
+    condition(Math.exp(followsthat(utt, uttprime, meanings).score({"follows": true}))!=1)
+    factor(speaker(state,meanings).score(uttprime))
+    return uttprime;
+  }})
+});
+
+var impSpeaker = cache(function(state,alpha,beta,gamma,uttalphas,halos,meanings,cost) { 
+  return Infer(function() {
+    var utt = utterancePrior()
+    var uttprime = utterancePrior()
+    var uttprimeMeaning = meanings[uttprime]
+    condition(uttprimeMeaning(state))
+    var speakerProb = Math.exp(speaker(state,meanings).score(utt))
+    //if (false) {
+    if(meanings == lowerMeanings && state == 30) {
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb)-cost(utt)))
+    } else if(meanings == upperMeanings && state == 20) {
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb)-cost(utt)))
+    } else if(meanings == exactMeanings) {
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb)-cost(utt)))
+    } else {
+      var partialTruthProb = halos[utt] * Math.exp(partialTruth(uttprime,meanings,cost).score(utt))
+      factor(uttalphas[utt] * alpha * gamma[utt] * (Math.log(speakerProb + beta * partialTruthProb)-cost(utt)))
+    }
+    return(utt)
+  })
+});
+
+var pragmaticListener = function(utterance,alpha,beta,gamma,uttalphas,halos,meanings,cost){
+  Infer({model: function(){
+    var state = statePrior()
+    observe(impSpeaker(state,alpha,beta,gamma,uttalphas,halos,meanings,cost),utterance)
+    return state
+  }})
+};
