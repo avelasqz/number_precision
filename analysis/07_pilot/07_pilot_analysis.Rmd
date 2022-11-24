@@ -1,0 +1,2658 @@
+---
+title: "07_pilot_analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lme4)
+source("helpers.R")
+library(languageR)
+library(lmerTest)
+library(wesanderson)
+library(dplyr)
+library(stringr)
+cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+```
+
+Set the background to be white instead of gray.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+theme_set(theme_minimal())
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d <- read.csv("../../data/07_pilot/07_pilot-merged.csv")
+summary(d)
+#View(d)
+```
+
+Exclude participants based on first language:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lang_exclude = d %>%
+  select(workerid, subject_information.language) %>%
+  filter(str_detect(subject_information.language,regex("english", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("en-us", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("engish", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("englush", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("enlgish", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("enlish", ignore_case=TRUE),negate=TRUE)) %>%
+  filter(str_detect(subject_information.language,regex("^$", ignore_case=TRUE),negate=TRUE)) %>%
+  select(workerid, subject_information.language)
+d_english_1 = d[!(d$workerid %in% lang_exclude$workerid),]
+#View(d_english_1)
+```
+
+Exclude participants based on confusion (yes/no):
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+confusion_yes_no_exclude = d_english_1 %>%
+  select(workerid, subject_information.asses) %>%
+  filter(str_detect(subject_information.asses,regex("no", ignore_case=TRUE),negate=TRUE)) %>%
+  select(workerid, subject_information.asses)
+d_confusion_2 = d_english_1[(d_english_1$workerid %in% confusion_yes_no_exclude$workerid),]
+#View(d_confusion_2)
+```
+
+Exclude participants based on attention check:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+attention_exclude = d_confusion_2 %>%
+  select(workerid, attention_check.check_check) %>%
+  filter(str_detect(attention_check.check_check,regex("false", ignore_case=TRUE),negate=TRUE)) %>%
+  select(workerid, attention_check.check_check)
+d_check_3 = d_confusion_2[(d_confusion_2$workerid %in% attention_exclude$workerid),]
+#View(d_check_3)
+```
+
+Define coin column selection function:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+coin_cols <- function() {
+  c(starts_with("coin"))
+}
+```
+
+Define workerid column selection function:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+worker_col <- function() {
+  c(starts_with("worker"))
+}
+```
+
+Define mean and normalization function:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+norm_20 <- function(x) {
+  m = mean(x)
+  return(m/20)
+}
+```
+
+Define bet_options:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+bet_options = c("coin_a"="20","coin_b"="21","coin_c"="22","coin_d"="23","coin_e"="24","coin_f"="25","coin_g"="26","coin_h"="27","coin_i"="28","coin_j"="29","coin_k"="30")
+```
+
+Get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+all_contexts_column_means =
+  select(d_check_3, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets across all contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_all_context = pivot_longer(all_contexts_column_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_all_context$value <- str_replace_all(pivot_all_context$value, bet_options)
+
+p <- ggplot(pivot_all_context) +
+        geom_col(aes(x=value, y=prop)) +
+        labs(title="07_pilot all contexts, n=689", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_allcontexts.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_lower_5 = d_check_3 %>%
+  filter(bound == "lower")
+
+lowerbound_means =
+  select(d_lower_5, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_lowerbounds = pivot_longer(lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_lowerbounds$value <- str_replace_all(pivot_lowerbounds$value, bet_options)
+
+p <- ggplot(pivot_lowerbounds) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot lower-bound contexts, n=351", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_upper_6 = d_check_3 %>%
+  filter(bound == "upper")
+
+upperbound_means =
+  select(d_upper_6, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_upperbounds = pivot_longer(upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_upperbounds$value <- str_replace_all(pivot_upperbounds$value, bet_options)
+
+p <- ggplot(pivot_upperbounds) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot upper-bound contexts, n=338", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Visualize lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_all_trials =
+  select(d_lower_5, worker_col(), coin_cols())
+
+pivot_lower_all = pivot_longer(lower_all_trials, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_all <- pivot_lower_all %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_all$value <- str_replace_all(pivot_lower_all$value, bet_options)
+
+p <- ggplot(pivot_lower_all) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      #scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot lower-bounded, individual trials, n=351", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_lowerbounds_individual.pdf", width = 15, height = 54, units = "in", limitsize = FALSE)
+```
+
+Visualize upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_all_trials =
+  select(d_upper_6, worker_col(), coin_cols())
+
+pivot_upper_all = pivot_longer(upper_all_trials, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_all <- pivot_upper_all %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_all$value <- str_replace_all(pivot_upper_all$value, bet_options)
+
+p <- ggplot(pivot_upper_all) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      #scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot upper-bounded, individual trials, n=338", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_upperbounds_individual.pdf", width = 15, height = 54, units = "in", limitsize = FALSE)
+```
+
+Three-category coin counts, all lower-bounded contexts:
+```{r}
+coinCountsLowerAll <- pivot_lower_all %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerAll <- coinCountsLowerAll %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, all upper-bounded contexts:
+```{r}
+coinCountsUpperAll <- pivot_upper_all %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperAll <- coinCountsUpperAll %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate trivia night contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_trivia_7 = d_check_3 %>%
+  filter(str_detect(item, "trivia"))
+
+trivia_all_means =
+  select(d_trivia_7, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for trivia night contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_trivia_all = pivot_longer(trivia_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_trivia_all$value <- str_replace_all(pivot_trivia_all$value, bet_options)
+
+p <- ggplot(pivot_trivia_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot trivia night all contexts, n=158", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_trivia_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate trivia night lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_trivia_lower_8 = d_check_3 %>%
+  filter(item == "trivianight_agn_lb")
+
+trivia_lowerbound_means =
+  select(d_trivia_lower_8, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for trivia night lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_trivia_lower = pivot_longer(trivia_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_trivia_lower$value <- str_replace_all(pivot_trivia_lower$value, bet_options)
+
+p <- ggplot(pivot_trivia_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot trivia night lower-bound contexts, n=88", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_trivia_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate trivia night upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_trivia_upper_9 = d_check_3 %>%
+  filter(item == "trivianight_agn_ub")
+
+trivia_upperbound_means =
+  select(d_trivia_upper_9, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for trivia night upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_trivia_upper = pivot_longer(trivia_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_trivia_upper$value <- str_replace_all(pivot_trivia_upper$value, bet_options)
+
+p <- ggplot(pivot_trivia_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot trivia night upper-bound contexts, n=70", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_trivia_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Visualize trivia night lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_trivia =
+  select(d_trivia_lower_8, worker_col(), coin_cols())
+
+pivot_lower_trivia = pivot_longer(lower_trivia, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_trivia <- pivot_lower_trivia %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_trivia$value <- str_replace_all(pivot_lower_trivia$value, bet_options)
+
+p <- ggplot(pivot_lower_trivia) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot trivia lower-bounded, individual trials, n=88", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_trivia_lowerbounds_individual.pdf", width = 15, height = 12, units = "in")
+```
+
+Visualize trivia night upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_trivia =
+  select(d_trivia_upper_9, worker_col(), coin_cols())
+
+pivot_upper_trivia = pivot_longer(upper_trivia, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_trivia <- pivot_upper_trivia %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_trivia$value <- str_replace_all(pivot_upper_trivia$value, bet_options)
+
+p <- ggplot(pivot_upper_trivia) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot trivia upper-bounded, individual trials, n=70", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_trivia_upperbounds_individual.pdf", width = 15, height = 10, units = "in")
+```
+
+Three-category coin counts, trivia lower-bounded contexts:
+```{r}
+coinCountsLowerTrivia <- pivot_lower_trivia %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerTrivia <- coinCountsLowerTrivia %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, trivia upper-bounded contexts:
+```{r}
+coinCountsUpperTrivia <- pivot_upper_trivia %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperTrivia <- coinCountsUpperTrivia %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate game night contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_gamenight_10 <- d_check_3 %>%
+  filter(str_detect(item, "gamenight"))
+
+gamenight_all_means =
+  select(d_gamenight_10, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for game night contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_gamenight_all = pivot_longer(gamenight_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_gamenight_all$value <- str_replace_all(pivot_gamenight_all$value, bet_options)
+
+p <- ggplot(pivot_gamenight_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot game night all contexts, n=160", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_gamenight_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate game night lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_gamenight_lower_11 = d_check_3 %>%
+  filter(item == "gamenight_agn_lb")
+
+gamenight_lowerbound_means =
+  select(d_gamenight_lower_11, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for game night lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_gamenight_lower = pivot_longer(gamenight_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_gamenight_lower$value <- str_replace_all(pivot_gamenight_lower$value, bet_options)
+
+p <- ggplot(pivot_gamenight_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot game night lower-bound contexts, n=89", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_gamenight_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate game night upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_gamenight_upper_12 = d_check_3 %>%
+  filter(item == "gamenight_agn_ub")
+
+gamenight_upperbound_means =
+  select(d_gamenight_upper_12, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for game night upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_gamenight_upper = pivot_longer(gamenight_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_gamenight_upper$value <- str_replace_all(pivot_gamenight_upper$value, bet_options)
+
+p <- ggplot(pivot_gamenight_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot game night upper-bound contexts, n=71", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_gamenight_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+
+
+Visualize game night lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_gamenight =
+  select(d_gamenight_lower_11, worker_col(), coin_cols())
+
+pivot_lower_gamenight = pivot_longer(lower_gamenight, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_gamenight <- pivot_lower_gamenight %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_gamenight$value <- str_replace_all(pivot_lower_gamenight$value, bet_options)
+
+p <- ggplot(pivot_lower_gamenight) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot game night lower-bounded, individual trials, n=89", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_gamenight_lowerbounds_individual.pdf", width = 15, height = 12, units = "in")
+```
+
+Visualize game night upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_gamenight =
+  select(d_gamenight_upper_12, worker_col(), coin_cols())
+
+pivot_upper_gamenight = pivot_longer(upper_gamenight, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_gamenight <- pivot_upper_gamenight %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_gamenight$value <- str_replace_all(pivot_upper_gamenight$value, bet_options)
+
+p <- ggplot(pivot_upper_gamenight) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot game night upper-bounded, individual trials, n=71", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_gamenight_upperbounds_individual.pdf", width = 15, height = 10, units = "in")
+```
+
+Three-category coin counts, game night lower-bounded contexts:
+```{r}
+coinCountsLowerGamenight <- pivot_lower_gamenight %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerGamenight <- coinCountsLowerGamenight %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, game night upper-bounded contexts:
+```{r}
+coinCountsUpperGamenight <- pivot_upper_gamenight %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperGamenight <- coinCountsUpperGamenight %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate extras contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_extras_13 = d_check_3 %>%
+  filter(str_detect(item, "extras"))
+
+extras_all_means =
+  select(d_extras_13, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for extras contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_extras_all = pivot_longer(extras_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_extras_all$value <- str_replace_all(pivot_extras_all$value, bet_options)
+
+p <- ggplot(pivot_extras_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot extras all contexts, n=176", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_extras_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate extras lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_extras_lower_14 = d_check_3 %>%
+  filter(item == "extras_agn_lb")
+
+extras_lowerbound_means =
+  select(d_extras_lower_14, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for extras lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_extras_lower = pivot_longer(extras_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_extras_lower$value <- str_replace_all(pivot_extras_lower$value, bet_options)
+
+p <- ggplot(pivot_extras_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot extras lower-bound contexts, n=85", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_extras_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate extras upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_extras_upper_15 = d_check_3 %>%
+  filter(item == "extras_agn_ub")
+
+extras_upperbound_means =
+  select(d_extras_upper_15, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for extras upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_extras_upper = pivot_longer(extras_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_extras_upper$value <- str_replace_all(pivot_extras_upper$value, bet_options)
+
+p <- ggplot(pivot_extras_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot extras upper-bound contexts, n=91", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_extras_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+
+
+Visualize extras lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_extras =
+  select(d_extras_lower_14, worker_col(), coin_cols())
+
+pivot_lower_extras = pivot_longer(lower_extras, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_extras <- pivot_lower_extras %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_extras$value <- str_replace_all(pivot_lower_extras$value, bet_options)
+
+p <- ggplot(pivot_lower_extras) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot extras lower-bounded, individual trials, n=85", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_extras_lowerbounds_individual.pdf", width = 15, height = 12, units = "in")
+```
+
+Visualize extras upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_extras =
+  select(d_extras_upper_15, worker_col(), coin_cols())
+
+pivot_upper_extras = pivot_longer(upper_extras, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_extras <- pivot_upper_extras %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_extras$value <- str_replace_all(pivot_upper_extras$value, bet_options)
+
+p <- ggplot(pivot_upper_extras) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot extras upper-bounded, individual trials, n=91", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_extras_upperbounds_individual.pdf", width = 15, height = 13, units = "in")
+```
+
+Three-category coin counts, extras lower-bounded contexts:
+```{r}
+coinCountsLowerExtras <- pivot_lower_extras %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerExtras <- coinCountsLowerExtras %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, extras upper-bounded contexts:
+```{r}
+coinCountsUpperExtras <- pivot_upper_extras %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperExtras <- coinCountsUpperExtras %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate chorus contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_chorus_16 = d_check_3 %>%
+  filter(str_detect(item, "chorus"))
+
+chorus_all_means =
+  select(d_chorus_16, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for chorus contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_chorus_all = pivot_longer(chorus_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_chorus_all$value <- str_replace_all(pivot_chorus_all$value, bet_options)
+
+p <- ggplot(pivot_chorus_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot chorus all contexts, n=195", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_chorus_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate chorus lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_chorus_lower_17 = d_check_3 %>%
+  filter(item == "chorus_agn_lb")
+
+chorus_lowerbound_means =
+  select(d_chorus_lower_17, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for chorus lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_chorus_lower = pivot_longer(chorus_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_chorus_lower$value <- str_replace_all(pivot_chorus_lower$value, bet_options)
+
+p <- ggplot(pivot_chorus_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot chorus lower-bound contexts, n=89", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_chorus_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate chorus upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_chorus_upper_18 = d_check_3 %>%
+  filter(item == "chorus_agn_ub")
+
+chorus_upperbound_means =
+  select(d_chorus_upper_18, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for chorus upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_chorus_upper = pivot_longer(chorus_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_chorus_upper$value <- str_replace_all(pivot_chorus_upper$value, bet_options)
+
+p <- ggplot(pivot_chorus_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot chorus upper-bound contexts, n=106", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_chorus_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+
+
+Visualize chorus lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_chorus =
+  select(d_chorus_lower_17, worker_col(), coin_cols())
+
+pivot_lower_chorus = pivot_longer(lower_chorus, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_chorus <- pivot_lower_chorus %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_chorus$value <- str_replace_all(pivot_lower_chorus$value, bet_options)
+
+p <- ggplot(pivot_lower_chorus) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot chorus lower-bounded, individual trials, n=89", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_chorus_lowerbounds_individual.pdf", width = 15, height = 13, units = "in")
+```
+
+Visualize chorus upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_chorus =
+  select(d_chorus_upper_18, worker_col(), coin_cols())
+
+pivot_upper_chorus = pivot_longer(upper_chorus, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_chorus <- pivot_upper_chorus %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_chorus$value <- str_replace_all(pivot_upper_chorus$value, bet_options)
+
+p <- ggplot(pivot_upper_chorus) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot chorus upper-bounded, individual trials, n=106", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_chorus_upperbounds_individual.pdf", width = 15, height = 15, units = "in")
+```
+
+Three-category coin counts, chorus lower-bounded contexts:
+```{r}
+coinCountsLowerChorus <- pivot_lower_chorus %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerChorus <- coinCountsLowerChorus %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, chorus upper-bounded contexts:
+```{r}
+coinCountsUpperChorus <- pivot_upper_chorus %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperChorus <- coinCountsUpperChorus %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate recruiting contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_recruiting_19 = d_check_3 %>%
+  filter(str_detect(item, "extras") | str_detect(item, "chorus"))
+
+recruiting_all_means =
+  select(d_recruiting_19, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for recruiting contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_recruiting_all = pivot_longer(recruiting_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_recruiting_all$value <- str_replace_all(pivot_recruiting_all$value, bet_options)
+
+p <- ggplot(pivot_recruiting_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot recruiting all contexts, n=371", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_recruiting_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate recruiting lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_recruiting_lower_20 = d_check_3 %>%
+  filter(item == "extras_agn_lb" | item == "chorus_agn_lb")
+
+recruiting_lowerbound_means =
+  select(d_recruiting_lower_20, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for recruiting lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_recruiting_lower = pivot_longer(recruiting_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_recruiting_lower$value <- str_replace_all(pivot_recruiting_lower$value, bet_options)
+
+p <- ggplot(pivot_recruiting_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot recruiting lower-bound contexts, n=174", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_recruiting_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate recruiting upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_recruiting_upper_21 = d_check_3 %>%
+  filter(item == "extras_agn_ub" | item == "chorus_agn_ub")
+
+recruiting_upperbound_means =
+  select(d_recruiting_upper_21, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for recruiting upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_recruiting_upper = pivot_longer(recruiting_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_recruiting_upper$value <- str_replace_all(pivot_recruiting_upper$value, bet_options)
+
+p <- ggplot(pivot_recruiting_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot recruiting upper-bound contexts, n=197", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_recruiting_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+
+
+Visualize recruiting lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_recruiting =
+  select(d_recruiting_lower_20, worker_col(), coin_cols())
+
+pivot_lower_recruiting = pivot_longer(lower_recruiting, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_recruiting <- pivot_lower_recruiting %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_recruiting$value <- str_replace_all(pivot_lower_recruiting$value, bet_options)
+
+p <- ggplot(pivot_lower_recruiting) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot recruiting lower-bounded, individual trials, n=174", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_recruiting_lowerbounds_individual.pdf", width = 15, height = 27, units = "in")
+```
+
+Visualize recruiting upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_recruiting =
+  select(d_recruiting_upper_21, worker_col(), coin_cols())
+
+pivot_upper_recruiting = pivot_longer(upper_recruiting, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_recruiting <- pivot_upper_recruiting %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_recruiting$value <- str_replace_all(pivot_upper_recruiting$value, bet_options)
+
+p <- ggplot(pivot_upper_recruiting) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot recruiting upper-bounded, individual trials, n=197", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_recruiting_upperbounds_individual.pdf", width = 15, height = 30, units = "in")
+```
+
+Three-category coin counts, recruiting lower-bounded contexts:
+```{r}
+coinCountsLowerRecruiting <- pivot_lower_recruiting %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerRecruiting <- coinCountsLowerRecruiting %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, recruiting upper-bounded contexts:
+```{r}
+coinCountsUpperRecruiting <- pivot_upper_recruiting %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperRecruiting <- coinCountsUpperRecruiting %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Isolate event contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_events_22 = d_check_3 %>%
+  filter(str_detect(item, "trivia") | str_detect(item, "gamenight"))
+
+events_all_means =
+  select(d_events_22, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for event contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_events_all = pivot_longer(events_all_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_events_all$value <- str_replace_all(pivot_events_all$value, bet_options)
+
+p <- ggplot(pivot_events_all) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot events all contexts, n=318", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_events_all.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate events lower-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_events_lower_23 = d_check_3 %>%
+  filter(item == "trivianight_agn_lb" | item == "gamenight_agn_lb")
+
+events_lowerbound_means =
+  select(d_events_lower_23, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for events lower-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_events_lower = pivot_longer(events_lowerbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_events_lower$value <- str_replace_all(pivot_events_lower$value, bet_options)
+
+p <- ggplot(pivot_events_lower) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot events lower-bound contexts, n=177", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_events_lowerbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+Isolate events upper-bound contexts, get means for bets over all contexts and normalize:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_events_upper_24 = d_check_3 %>%
+  filter(item == "trivianight_agn_ub" | item == "gamenight_agn_ub")
+
+events_upperbound_means =
+  select(d_events_upper_24, coin_cols()) %>%
+  summarise_all(norm_20)
+```
+
+Plot bets for events upper-bound contexts:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+pivot_events_upper = pivot_longer(events_upperbound_means, cols = 1:11, names_to = "value", values_to = "prop")
+
+pivot_events_upper$value <- str_replace_all(pivot_events_upper$value, bet_options)
+
+p <- ggplot(pivot_events_upper) +
+      geom_col(aes(x=value, y=prop)) +
+      labs(title="07_pilot events upper-bound contexts, n=141", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_events_upperbounds.pdf", width = 5, height = 3, units = "in")
+```
+
+
+
+Visualize events lower-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+lower_events =
+  select(d_events_lower_23, worker_col(), coin_cols())
+
+pivot_lower_events = pivot_longer(lower_events, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_lower_events <- pivot_lower_events %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_lower_events$value <- str_replace_all(pivot_lower_events$value, bet_options)
+
+p <- ggplot(pivot_lower_events) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot events lower-bounded, individual trials, n=177", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_events_lowerbounds_individual.pdf", width = 15, height = 27, units = "in")
+```
+
+Visualize events upper-bounded individual trial distributions:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+upper_events =
+  select(d_events_upper_24, worker_col(), coin_cols())
+
+pivot_upper_events = pivot_longer(upper_events, cols = 2:12, names_to = "value", values_to = "prop")
+
+lowerDelim <- list("coin_a","coin_b","coin_c","coin_d","coin_e")
+upperDelim <- list("coin_g","coin_h","coin_i","coin_j","coin_k")
+
+pivot_upper_events <- pivot_upper_events %>% 
+  mutate(delimit = case_when(
+    value %in% lowerDelim ~ "below",
+    value %in% upperDelim ~ "above",
+    value == "coin_f" ~ "25"
+  ))
+
+pivot_upper_events$value <- str_replace_all(pivot_upper_events$value, bet_options)
+
+p <- ggplot(pivot_upper_events) +
+      facet_wrap(~workerid, ncol=8) +
+      geom_col(aes(x=value, y=prop,fill=delimit)) + 
+      theme_bw() + 
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(title="07_pilot events upper-bounded, individual trials, n=141", x="Value", y="Proportion")
+
+p
+ggsave(plot = p, filename = "07_pilot_events_upperbounds_individual.pdf", width = 15, height = 20, units = "in")
+```
+
+Three-category coin counts, events lower-bounded contexts:
+```{r}
+coinCountsLowerEvents <- pivot_lower_events %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsLowerEvents <- coinCountsLowerEvents %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+Three-category coin counts, events upper-bounded contexts:
+```{r}
+coinCountsUpperEvents <- pivot_upper_events %>% 
+  group_by(delimit) %>% 
+  summarise(totalCoins = sum(prop))
+
+order <- c("below", "25", "above")
+
+coinCountsUpperEvents <- coinCountsUpperEvents %>%
+  mutate(prop=totalCoins/sum(totalCoins)) %>%
+  slice(match(order, delimit))
+```
+
+
+
+Add new item and macroCat columns:
+```{r}
+d_macroCat_25 <- d_check_3 %>% 
+  mutate(item = case_when(
+  str_detect(item, "gamenight") ~ "gamenight",
+  str_detect(item, "trivianight") ~ "trivianight",
+  str_detect(item, "chorus") ~ "chorus",
+  str_detect(item, "extras") ~ "extras"
+  )) %>% 
+  mutate(macroCat = case_when(
+    item %in% list("gamenight","trivianight") ~ "event",
+    item %in% list("chorus","extras") ~ "recruiting"
+  )) 
+```
+
+Pivoted means BY ITEM-BOUND:
+```{r}
+d_props_by_item_bound_26 <- d_macroCat_25 %>% 
+  group_by(item,bound) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_item_bound_27 <- pivot_longer(d_props_by_item_bound_26, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_item_bound_27 <- d_pivotedprops_item_bound_27 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Pivoted means BY ITEM:
+```{r}
+d_props_by_item_28 <- d_macroCat_25 %>% 
+  group_by(item) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_item_29 <- pivot_longer(d_props_by_item_28, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_item_29 <- d_pivotedprops_item_29 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Pivoted means BY BOUND:
+```{r}
+d_props_by_bound_30 <- d_macroCat_25 %>% 
+  group_by(bound) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_bound_31 <- pivot_longer(d_props_by_bound_30, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_bound_31 <- d_pivotedprops_bound_31 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Pivoted means BY MACROCAT :
+```{r}
+d_props_by_macrocat_32 <- d_macroCat_25 %>% 
+  group_by(macroCat) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_macrocat_33 <- pivot_longer(d_props_by_macrocat_32, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_macrocat_33 <- d_pivotedprops_macrocat_33 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Pivoted means BY MACROCAT-BOUND:
+```{r}
+d_props_by_macrocat_bound_34 <- d_macroCat_25 %>% 
+  group_by(macroCat,bound) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_macrocat_bound_35 <- pivot_longer(d_props_by_macrocat_bound_34, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_macrocat_bound_35 <- d_pivotedprops_macrocat_bound_35 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+
+
+Visualize tri-category proportions by item and bound:
+```{r}
+tri_cat_by_item_bound <- d_pivotedprops_item_bound_27 %>%
+                            group_by(triCat,item,bound) %>% 
+                            summarize(sumProp = sum(prop)) %>% 
+                            ggplot(aes(x=triCat,y=sumProp,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                            geom_point() + 
+                            geom_line() +
+                            ggtitle("Tri-category comparison by item and bound, n=689") +
+                            scale_y_continuous(name="Proportion") +
+                            scale_x_discrete(name="Value",
+                              limits=c("below", "25", "above"))
+
+tri_cat_by_item_bound
+#ggsave(plot = tri_cat_by_item_bound, filename = "07_pilot_tri_cat_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions by item and bound (faceted bar chart):
+```{r}
+tri_cat_by_item_bound_bar <- d_pivotedprops_item_bound_27 %>%
+                                ggplot(aes(x=triCat,y=prop,fill=bound,label=prop)) + 
+                                geom_bar(stat="identity",position="dodge") + 
+                                facet_wrap(~item) + 
+                                theme_bw() + 
+                                scale_fill_brewer("bound", palette="Blues") +
+                                ggtitle("Tri-category comparison by item and bound, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_by_item_bound_bar
+#ggsave(plot = tri_cat_by_item_bound_bar, filename = "07_pilot_tri_cat_by_item_bound_bar.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions by bound:
+```{r}
+tri_cat_by_bound <- d_pivotedprops_bound_31 %>%
+                        group_by(triCat,bound) %>% 
+                        summarize(sumProp = sum(prop)) %>% 
+                        ggplot(aes(x=triCat,y=sumProp,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                        geom_point() + 
+                        geom_line() +
+                        ggtitle("Tri-category comparison by bound, n=689") +
+                        scale_y_continuous(name="Proportion") +
+                        scale_x_discrete(name="Value",
+                          limits=c("below", "25", "above"))
+
+tri_cat_by_bound
+#ggsave(plot = tri_cat_by_bound, filename = "07_pilot_tri_cat_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions by item:
+```{r}
+tri_cat_by_item <- d_pivotedprops_item_29 %>%
+                          group_by(triCat,item) %>% 
+                          summarize(sumProp = sum(prop)) %>% 
+                          ggplot(aes(x=triCat,y=sumProp,color=item,linetype=item,shape=item,group=item)) + 
+                          geom_point() + 
+                          geom_line() +
+                          ggtitle("Tri-category comparison by context, n=689") +
+                          scale_y_continuous(name="Proportion") +
+                          scale_x_discrete(name="Value",
+                            limits=c("below", "25", "above"))
+
+tri_cat_by_item
+#ggsave(plot = tri_cat_by_item, filename = "07_pilot_tri_cat_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions by macroCat:
+```{r}
+tri_cat_by_macrocat <- d_pivotedprops_macrocat_33 %>%
+                          group_by(triCat,macroCat) %>% 
+                          summarize(sumProp = sum(prop)) %>% 
+                          ggplot(aes(x=triCat,y=sumProp,color=macroCat,linetype=macroCat,shape=macroCat,group=macroCat)) + 
+                          geom_point() + 
+                          geom_line() +
+                          ggtitle("Tri-category comparison by context type, n=689") +
+                          scale_y_continuous(name="Proportion") +
+                          scale_x_discrete(name="Value",
+                            limits=c("below", "25", "above"))
+
+tri_cat_by_macrocat
+#ggsave(plot = tri_cat_by_macrocat, filename = "07_pilot_tri_cat_by_macrocat.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions by macroCat and bound:
+```{r}
+tri_cat_by_macrocat_bound <- d_pivotedprops_macrocat_bound_35 %>%
+                                group_by(triCat,macroCat,bound) %>% 
+                                summarize(sumProp = sum(prop)) %>% 
+                                ggplot(aes(x=triCat,y=sumProp,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Tri-category comparison by context type and bound, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_by_macrocat_bound
+#ggsave(plot = tri_cat_by_macrocat_bound, filename = "07_pilot_tri_cat_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions for trivia by bound:
+```{r}
+tri_cat_trivia_by_bound <- d_pivotedprops_item_bound_27 %>%
+                                filter(item == "trivianight") %>%
+                                group_by(triCat,bound) %>% 
+                                summarize(sumProp = sum(prop)) %>% 
+                                ggplot(aes(x=triCat,y=sumProp,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Tri-category comparison for trivia by bound, n=158") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_trivia_by_bound
+#ggsave(plot = tri_cat_trivia_by_bound, filename = "07_pilot_tri_cat_trivia_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions for gamenight by bound:
+```{r}
+tri_cat_gamenight_by_bound <- d_pivotedprops_item_bound_27 %>%
+                                filter(item == "gamenight") %>%
+                                group_by(triCat,bound) %>% 
+                                summarize(sumProp = sum(prop)) %>% 
+                                ggplot(aes(x=triCat,y=sumProp,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Tri-category comparison for gamenight by bound, n=160") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_gamenight_by_bound
+#ggsave(plot = tri_cat_gamenight_by_bound, filename = "07_pilot_tri_cat_gamenight_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions for extras by bound:
+```{r}
+tri_cat_extras_by_bound <- d_pivotedprops_item_bound_27 %>%
+                                filter(item == "extras") %>%
+                                group_by(triCat,bound) %>% 
+                                summarize(sumProp = sum(prop)) %>% 
+                                ggplot(aes(x=triCat,y=sumProp,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Tri-category comparison for extras by bound, n=176") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_extras_by_bound
+#ggsave(plot = tri_cat_extras_by_bound, filename = "07_pilot_tri_cat_extras_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Visualize tri-category proportions for chorus by bound:
+```{r}
+tri_cat_chorus_by_bound <- d_pivotedprops_item_bound_27 %>%
+                                filter(item == "chorus") %>%
+                                group_by(triCat,bound) %>% 
+                                summarize(sumProp = sum(prop)) %>% 
+                                ggplot(aes(x=triCat,y=sumProp,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Tri-category comparison for chorus by bound, n=176") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Value",
+                                  limits=c("below", "25", "above"))
+
+tri_cat_chorus_by_bound
+#ggsave(plot = tri_cat_chorus_by_bound, filename = "07_pilot_tri_cat_chorus_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Set up full dataframe with tri-category raw coin values:
+```{r}
+d_triCatRaw_36 <- d_macroCat_25 %>%
+  rowwise() %>%
+  mutate(below = sum(c(coin_a, coin_b, coin_c, coin_d, coin_e))) %>%
+  mutate(exact = coin_f) %>%
+  mutate(above = sum(c(coin_g, coin_h, coin_i, coin_j, coin_k)))
+```
+
+
+
+Add column for binning participants--exact and below; exact and above; exact only; all three:
+(Note, 3 participants in the NONE category.)
+```{r}
+d_participant_bins_37 <- d_triCatRaw_36 %>%
+  mutate(part_bin = case_when(
+    (below > 0 & exact >= 0 & above == 0) ~ "ex_bel",
+    (below == 0 & exact > 0 & above == 0) ~ "ex",
+    (below == 0 & exact >= 0 & above > 0) ~ "ex_abv",
+    (below > 0 & exact > 0 & above > 0) ~ "all"
+    #(below > 0 & exact == 0 & above > 0) ~ "NONE"
+  ))
+```
+
+Plot the number of participants in each bin by context and bound:
+```{r}
+part_bin_by_item_bound <- d_participant_bins_37 %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_by_item_bound_plot <- part_bin_by_item_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item and bound, n=686") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_by_item_bound_plot
+ggsave(plot = part_bin_by_item_bound_plot, filename = "07_pilot_part_bin_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin for trivia night by bound:
+```{r}
+part_bin_trivia_by_bound <- d_participant_bins_37 %>%
+                                filter(item == "trivianight") %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_trivia_by_bound_plot <- part_bin_trivia_by_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants for trivianight by bound, n=155") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_trivia_by_bound_plot
+ggsave(plot = part_bin_trivia_by_bound_plot, filename = "07_pilot_part_bin_trivia_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin for game night by bound:
+```{r}
+part_bin_gamenight_by_bound <- d_participant_bins_37 %>%
+                                filter(item == "gamenight") %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_gamenight_by_bound_plot <- part_bin_gamenight_by_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants for gamenight by bound, n=160") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_gamenight_by_bound_plot
+ggsave(plot = part_bin_gamenight_by_bound_plot, filename = "07_pilot_part_bin_gamenight_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin for extras by bound:
+```{r}
+part_bin_extras_by_bound <- d_participant_bins_37 %>%
+                                filter(item == "extras") %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_extras_by_bound_plot <- part_bin_extras_by_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants for extras by bound, n=176") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_extras_by_bound_plot
+ggsave(plot = part_bin_extras_by_bound_plot, filename = "07_pilot_part_bin_extras_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin for chorus by bound:
+```{r}
+part_bin_chorus_by_bound <- d_participant_bins_37 %>%
+                                filter(item == "chorus") %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_chorus_by_bound_plot <- part_bin_chorus_by_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants for chorus by bound, n=195") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_chorus_by_bound_plot
+ggsave(plot = part_bin_chorus_by_bound_plot, filename = "07_pilot_part_bin_chorus_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by context and bound, faceted by context:
+```{r}
+part_bin_by_item_bound_faceted <- d_participant_bins_37 %>%
+                                group_by(item, bound, part_bin) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_by_item_bound_faceted_plot <- part_bin_by_item_bound_faceted %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                facet_wrap(~item) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by item and bound, n=686") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_by_item_bound_faceted_plot
+ggsave(plot = part_bin_by_item_bound_faceted_plot, filename = "07_pilot_part_bin_by_item_bound_faceted.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by bound:
+```{r}
+part_bin_by_bound <- d_participant_bins_37 %>%
+                                group_by(bound, part_bin) %>%
+                                count() %>%
+                                group_by(bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_by_bound_plot <- part_bin_by_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by bound, n=686") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_by_bound_plot
+ggsave(plot = part_bin_by_bound_plot, filename = "07_pilot_part_bin_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by item:
+```{r}
+part_bin_by_item <- d_participant_bins_37 %>%
+                                group_by(item, part_bin) %>%
+                                count() %>%
+                                group_by(item) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_by_item_plot <- part_bin_by_item %>%
+                                ggplot(aes(x=part_bin,y=prop,color=item,linetype=item,shape=item,group=item)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item, n=686") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_by_item_plot
+ggsave(plot = part_bin_by_item_plot, filename = "07_pilot_part_bin_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by macroCat and bound:
+```{r}
+part_bin_by_macrocat_bound <- d_participant_bins_37 %>%
+                                group_by(macroCat, bound, part_bin) %>%
+                                count() %>%
+                                group_by(macroCat, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_by_macrocat_bound_plot <- part_bin_by_macrocat_bound %>%
+                                ggplot(aes(x=part_bin,y=prop,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) +  
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by category and bound, n=686") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("ex_bel", "ex", "ex_abv", "all"))
+
+part_bin_by_macrocat_bound_plot
+ggsave(plot = part_bin_by_macrocat_bound_plot, filename = "07_pilot_part_bin_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Add column for binning participants--those who ranked below higher than above, those that ranked above higher than below:
+```{r}
+d_bins_belowvabove_38 <- d_participant_bins_37 %>%
+  mutate(part_bin_bva = case_when(
+    (below > above) ~ "preferbelow",
+    (below < above) ~ "preferabove"
+  ))
+```
+
+Plot the number of participants in each bin by context and bound:
+```{r}
+part_bin_bva_by_item_bound <- d_bins_belowvabove_38 %>%
+                                group_by(item, bound, part_bin_bva) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_by_item_bound_plot <- part_bin_bva_by_item_bound %>%
+                                ggplot(aes(x=part_bin_bva,y=prop,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item and bound, below vs. above, n=396") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferabove"))
+
+part_bin_bva_by_item_bound_plot
+ggsave(plot = part_bin_bva_by_item_bound_plot, filename = "07_pilot_part_bin_bva_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by context and bound, faceted by context:
+```{r}
+part_bin_bva_by_item_bound_faceted <- d_bins_belowvabove_38 %>%
+                                group_by(item, bound, part_bin_bva) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_by_item_bound_faceted_plot <- part_bin_bva_by_item_bound_faceted %>%
+                                ggplot(aes(x=part_bin_bva,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                facet_wrap(~item) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by item and bound, below vs. above, n=396") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferabove"))
+
+part_bin_bva_by_item_bound_faceted_plot
+ggsave(plot = part_bin_bva_by_item_bound_faceted_plot, filename = "07_pilot_part_bin_bva_by_item_bound_faceted.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by bound:
+```{r}
+part_bin_bva_by_bound <- d_bins_belowvabove_38 %>%
+                                group_by(bound, part_bin_bva) %>%
+                                count() %>%
+                                group_by(bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_by_bound_plot <- part_bin_bva_by_bound %>%
+                                ggplot(aes(x=part_bin_bva,y=prop,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by bound, below vs. above, n=396") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferabove"))
+
+part_bin_bva_by_bound_plot
+ggsave(plot = part_bin_bva_by_bound_plot, filename = "07_pilot_part_bin_bva_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by item:
+```{r}
+part_bin_bva_by_item <- d_bins_belowvabove_38 %>%
+                                group_by(item, part_bin_bva) %>%
+                                count() %>%
+                                group_by(item) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_by_item_plot <- part_bin_bva_by_item %>%
+                                ggplot(aes(x=part_bin_bva,y=prop,color=item,linetype=item,shape=item,group=item)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item, below vs. above, n=396") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferabove"))
+
+part_bin_bva_by_item_plot
+ggsave(plot = part_bin_bva_by_item_plot, filename = "07_pilot_part_bin_bva_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by macroCat and bound:
+```{r}
+part_bin_bva_by_macrocat_bound <- d_bins_belowvabove_38 %>%
+                                group_by(macroCat, bound, part_bin_bva) %>%
+                                count() %>%
+                                group_by(macroCat, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_by_macrocat_bound_plot <- part_bin_bva_by_macrocat_bound %>%
+                                ggplot(aes(x=part_bin_bva,y=prop,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) +  
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by category and bound, below vs. above, n=396") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferabove"))
+
+part_bin_bva_by_macrocat_bound_plot
+ggsave(plot = part_bin_bva_by_macrocat_bound_plot, filename = "07_pilot_part_bin_bva_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Add column for binning participants--those whose first-ranked choice besides 25 was below vs. those for whom it was above vs. those for whom it was even:
+```{r}
+d_bins_belowvabove_high_39 <- d_bins_belowvabove_38 %>%
+  mutate(part_bin_bvahigh = case_when(
+    pmax(coin_a, coin_b, coin_c, coin_d, coin_e) > pmax(coin_g, coin_h, coin_i, coin_j, coin_k) ~ "belowhigh",
+    pmax(coin_a, coin_b, coin_c, coin_d, coin_e) == pmax(coin_g, coin_h, coin_i, coin_j, coin_k) ~ "equal",
+    pmax(coin_a, coin_b, coin_c, coin_d, coin_e) < pmax(coin_g, coin_h, coin_i, coin_j, coin_k) ~ "abovehigh"
+  ))
+```
+
+Plot the number of participants in each bin by context and bound:
+```{r}
+part_bin_bvahigh_by_item_bound <- d_bins_belowvabove_high_39 %>%
+                                group_by(item, bound, part_bin_bvahigh) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_by_item_bound_plot <- part_bin_bvahigh_by_item_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh,y=prop,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh"))
+
+part_bin_bvahigh_by_item_bound_plot
+ggsave(plot = part_bin_bvahigh_by_item_bound_plot, filename = "07_pilot_part_bin_bvahigh_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by context and bound, faceted by context:
+```{r}
+part_bin_bvahigh_by_item_bound_faceted <- d_bins_belowvabove_high_39 %>%
+                                group_by(item, bound, part_bin_bvahigh) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_by_item_bound_faceted_plot <- part_bin_bvahigh_by_item_bound_faceted %>%
+                                ggplot(aes(x=part_bin_bvahigh,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                facet_wrap(~item) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by item and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh"))
+
+part_bin_bvahigh_by_item_bound_faceted_plot
+ggsave(plot = part_bin_bvahigh_by_item_bound_faceted_plot, filename = "07_pilot_part_bin_bvahigh_by_item_bound_faceted.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by bound:
+```{r}
+part_bin_bvahigh_by_bound <- d_bins_belowvabove_high_39 %>%
+                                group_by(bound, part_bin_bvahigh) %>%
+                                count() %>%
+                                group_by(bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_by_bound_plot <- part_bin_bvahigh_by_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh,y=prop,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh"))
+
+part_bin_bvahigh_by_bound_plot
+ggsave(plot = part_bin_bvahigh_by_bound_plot, filename = "07_pilot_part_bin_bvahigh_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by item:
+```{r}
+part_bin_bvahigh_by_item <- d_bins_belowvabove_high_39 %>%
+                                group_by(item, part_bin_bvahigh) %>%
+                                count() %>%
+                                group_by(item) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_by_item_plot <- part_bin_bvahigh_by_item %>%
+                                ggplot(aes(x=part_bin_bvahigh,y=prop,color=item,linetype=item,shape=item,group=item)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh"))
+
+part_bin_bvahigh_by_item_plot
+ggsave(plot = part_bin_bvahigh_by_item_plot, filename = "07_pilot_part_bin_bvahigh_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by macroCat and bound:
+```{r}
+part_bin_bvahigh_by_macrocat_bound <- d_bins_belowvabove_high_39 %>%
+                                group_by(macroCat, bound, part_bin_bvahigh) %>%
+                                count() %>%
+                                group_by(macroCat, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_by_macrocat_bound_plot <- part_bin_bvahigh_by_macrocat_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh,y=prop,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by category and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh"))
+
+part_bin_bvahigh_by_macrocat_bound_plot
+ggsave(plot = part_bin_bvahigh_by_macrocat_bound_plot, filename = "07_pilot_part_bin_bvahigh_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Add column for binning participants--those whose first-ranked choice besides 25 was below vs. those for whom it was above vs. those for whom it was even VS. THOSE WHO CHOSE NEITHER (both below and above were empty):
+```{r}
+d_bins_belowvabove_high_fourway_40 <- d_bins_belowvabove_high_39 %>%
+  mutate(part_bin_bvahigh_four = case_when(
+    pmax(coin_a, coin_b, coin_c, coin_d, coin_e) > pmax(coin_g, coin_h, coin_i, coin_j, coin_k) ~ "belowhigh",
+    ((below > 0 & above > 0) & pmax(coin_a, coin_b, coin_c, coin_d, coin_e) == pmax(coin_g, coin_h, coin_i, coin_j, coin_k)) ~ "equal",
+    pmax(coin_a, coin_b, coin_c, coin_d, coin_e) < pmax(coin_g, coin_h, coin_i, coin_j, coin_k) ~ "abovehigh",
+    ((below == 0 & above == 0) & pmax(coin_a, coin_b, coin_c, coin_d, coin_e) == pmax(coin_g, coin_h, coin_i, coin_j, coin_k)) ~ "neither"
+  ))
+```
+
+Plot the number of participants in each bin by context and bound:
+```{r}
+part_bin_bvahigh_fourway_by_item_bound <- d_bins_belowvabove_high_fourway_40 %>%
+                                group_by(item, bound, part_bin_bvahigh_four) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_fourway_by_item_bound_plot <- part_bin_bvahigh_fourway_by_item_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_bvahigh_fourway_by_item_bound_plot
+ggsave(plot = part_bin_bvahigh_fourway_by_item_bound_plot, filename = "07_pilot_part_bin_bvahigh_fourway_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by context and bound, faceted by context:
+```{r}
+part_bin_bvahigh_fourway_by_item_bound_faceted <- d_bins_belowvabove_high_fourway_40 %>%
+                                group_by(item, bound, part_bin_bvahigh_four) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_fourway_by_item_bound_faceted_plot <- part_bin_bvahigh_fourway_by_item_bound_faceted %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                facet_wrap(~item) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by item and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_bvahigh_fourway_by_item_bound_faceted_plot
+ggsave(plot = part_bin_bvahigh_fourway_by_item_bound_faceted_plot, filename = "07_pilot_part_bin_bvahigh_fourway_by_item_bound_faceted.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by bound:
+```{r}
+part_bin_bvahigh_fourway_by_bound <- d_bins_belowvabove_high_fourway_40 %>%
+                                group_by(bound, part_bin_bvahigh_four) %>%
+                                count() %>%
+                                group_by(bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_fourway_by_bound_plot <- part_bin_bvahigh_fourway_by_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_bvahigh_fourway_by_bound_plot
+ggsave(plot = part_bin_bvahigh_fourway_by_bound_plot, filename = "07_pilot_part_bin_bvahigh_fourway_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by item:
+```{r}
+part_bin_bvahigh_fourway_by_item <- d_bins_belowvabove_high_fourway_40 %>%
+                                group_by(item, part_bin_bvahigh_four) %>%
+                                count() %>%
+                                group_by(item) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_fourway_by_item_plot <- part_bin_bvahigh_fourway_by_item %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop,color=item,linetype=item,shape=item,group=item)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_bvahigh_fourway_by_item_plot
+ggsave(plot = part_bin_bvahigh_fourway_by_item_plot, filename = "07_pilot_part_bin_bvahigh_fourway_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by macroCat and bound:
+```{r}
+part_bin_bvahigh_fourway_by_macrocat_bound <- d_bins_belowvabove_high_fourway_40 %>%
+                                group_by(macroCat, bound, part_bin_bvahigh_four) %>%
+                                count() %>%
+                                group_by(macroCat, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bvahigh_fourway_by_macrocat_bound_plot <- part_bin_bvahigh_fourway_by_macrocat_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by category and bound, below vs. above, high choice, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_bvahigh_fourway_by_macrocat_bound_plot
+ggsave(plot = part_bin_bvahigh_fourway_by_macrocat_bound_plot, filename = "07_pilot_part_bin_bvahigh_fourway_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Add column for binning participants--those who ranked below higher than above, those that ranked above higher than below, those who ranked them equal, and those who put no weight on either:
+```{r}
+d_bins_belowvabove_fourway_41 <- d_bins_belowvabove_high_fourway_40 %>%
+  mutate(part_bin_bva_four = case_when(
+    (below > above) ~ "preferbelow",
+    (below < above) ~ "preferabove",
+    (below > 0 & above > 0) & (below ==  above) ~ "preferequal",
+    (below == 0 & above == 0) ~ "preferneither"
+  ))
+```
+
+Plot the number of participants in each bin by context and bound:
+```{r}
+part_bin_bva_fourway_by_item_bound <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(item, bound, part_bin_bva_four) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_fourway_by_item_bound_plot <- part_bin_bva_fourway_by_item_bound %>%
+                                ggplot(aes(x=part_bin_bva_four,y=prop,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item and bound, below vs. above, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferequal", "preferabove", "preferneither"),
+                                  labels=c("prefer below", "equal preference", "prefer above", "exact only"))
+
+part_bin_bva_fourway_by_item_bound_plot
+ggsave(plot = part_bin_bva_fourway_by_item_bound_plot, filename = "07_pilot_part_bin_bva_fourway_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by context and bound, faceted by context:
+```{r}
+part_bin_bva_fourway_by_item_bound_faceted <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(item, bound, part_bin_bva_four) %>%
+                                count() %>%
+                                group_by(item, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_fourway_by_item_bound_faceted_plot <- part_bin_bva_fourway_by_item_bound_faceted %>%
+                                ggplot(aes(x=part_bin_bva_four,y=prop,color=bound,linetype=bound,shape=bound,group=interaction(item,bound))) + 
+                                geom_point() + 
+                                geom_line() +
+                                facet_wrap(~item) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by item and bound, below vs. above, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferequal", "preferabove", "preferneither"),
+                                  labels=c("prefer below", "equal preference", "prefer above", "exact only"))
+
+part_bin_bva_fourway_by_item_bound_faceted_plot
+ggsave(plot = part_bin_bva_fourway_by_item_bound_faceted_plot, filename = "07_pilot_part_bin_bva_fourway_by_item_bound_faceted.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by bound:
+```{r}
+part_bin_bva_fourway_by_bound <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(bound, part_bin_bva_four) %>%
+                                count() %>%
+                                group_by(bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_fourway_by_bound_plot <- part_bin_bva_fourway_by_bound %>%
+                                ggplot(aes(x=part_bin_bva_four,y=prop,color=bound,linetype=bound,shape=bound,group=bound)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by bound, below vs. above, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferequal", "preferabove", "preferneither"),
+                                  labels=c("prefer below", "equal preference", "prefer above", "exact only"))
+
+part_bin_bva_fourway_by_bound_plot
+ggsave(plot = part_bin_bva_fourway_by_bound_plot, filename = "07_pilot_part_bin_bva_fourway_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by item:
+```{r}
+part_bin_bva_fourway_by_item <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(item, part_bin_bva_four) %>%
+                                count() %>%
+                                group_by(item) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_fourway_by_item_plot <- part_bin_bva_fourway_by_item %>%
+                                ggplot(aes(x=part_bin_bva_four,y=prop,color=item,linetype=item,shape=item,group=item)) + 
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by item, below vs. above, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferequal", "preferabove", "preferneither"),
+                                  labels=c("prefer below", "equal preference", "prefer above", "exact only"))
+
+part_bin_bva_fourway_by_item_plot
+ggsave(plot = part_bin_bva_fourway_by_item_plot, filename = "07_pilot_part_bin_bva_fourway_by_item.pdf", width = 8, height = 5, units = "in")
+```
+
+Plot the number of participants in each bin by macroCat and bound:
+```{r}
+part_bin_bva_fourway_by_macrocat_bound <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(macroCat, bound, part_bin_bva_four) %>%
+                                count() %>%
+                                group_by(macroCat, bound) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_bva_fourway_by_macrocat_bound_plot <- part_bin_bva_fourway_by_macrocat_bound %>%
+                                ggplot(aes(x=part_bin_bva_four,y=prop,color=macroCat,linetype=bound,shape=macroCat,group=interaction(macroCat,bound))) +  
+                                geom_point() + 
+                                geom_line() +
+                                ggtitle("Binned participants by category and bound, below vs. above, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("preferbelow", "preferequal", "preferabove", "preferneither"),
+                                  labels=c("prefer below", "equal preference", "prefer above", "exact only"))
+
+part_bin_bva_fourway_by_macrocat_bound_plot
+ggsave(plot = part_bin_bva_fourway_by_macrocat_bound_plot, filename = "07_pilot_part_bin_bva_fourway_by_macrocat_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Plot the participants by two bin measures--first by high choice (belowhigh vs. equal vs. abovehigh), then by overall preference (preferbelow vs. preferabove):
+```{r}
+part_bin_comparison_by_bound <- d_bins_belowvabove_fourway_41 %>%
+                                group_by(bound, part_bin_bvahigh_four, part_bin_bva_four) %>%
+                                count(.drop=FALSE) %>%
+                                group_by(bound,part_bin_bvahigh_four) %>%
+                                mutate(prop = n/sum(n))
+
+part_bin_comparison_by_bound_plot <- part_bin_comparison_by_bound %>%
+                                ggplot(aes(x=part_bin_bvahigh_four,y=prop, fill=part_bin_bva_four, label=prop)) + 
+                                geom_bar(stat="identity",position="fill") + 
+                                facet_wrap(~bound) + 
+                                theme_bw() +
+                                ggtitle("Binned participants by bound, high choice and overall weight, n=689") +
+                                scale_y_continuous(name="Proportion") +
+                                scale_x_discrete(name="Bin",
+                                  limits=c("belowhigh", "equal", "abovehigh", "neither"))
+
+part_bin_comparison_by_bound_plot
+ggsave(plot = part_bin_comparison_by_bound_plot, filename = "07_pilot_part_bin_comparison_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Plot raw coin counts by bound, faceted by item:
+```{r}
+raw_count_props_all_by_item_bound <- d_pivotedprops_item_bound_27 %>%
+                                      ggplot(aes(x=value,y=prop,fill=bound,label=prop)) + 
+                                      geom_bar(stat="identity",position="dodge") + 
+                                      facet_wrap(~item) + 
+                                      theme_bw() + 
+                                      scale_fill_brewer("bound", palette="Blues") +
+                                      ggtitle("Raw count proportion comparison by item and bound, n=689") +
+                                      scale_y_continuous(name="Proportion") +
+                                      scale_x_discrete(name="Value")
+
+raw_count_props_all_by_item_bound
+
+ggsave(plot = raw_count_props_all_by_item_bound, filename = "07_pilot_raw_count_props_all_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Add row for weighted means:
+```{r}
+d_raw_weighted_means_42 <- d_bins_belowvabove_fourway_41 %>%
+  ungroup() %>%
+  mutate(wgt_mean = (coin_a * 0.05 *20) + (coin_b * 0.05 *21) + (coin_c * 0.05 *22)  + (coin_d * 0.05 *23)  + (coin_e * 0.05 *24) + (coin_f * 0.05 *25) + (coin_g * 0.05 *26) + (coin_h * 0.05 *27) + (coin_i * 0.05 *28) + (coin_j * 0.05 *29) + (coin_k * 0.05 *30))
+```
+
+Plot weighted mean by participant for each bound:
+```{r}
+d_raw_weighted_means_by_bound_plot <- d_raw_weighted_means_42 %>%
+                                      group_by(bound) %>%
+                                      summarize(mean = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+                                      mutate(YMin = mean - CI.Low, YMax = mean + CI.High) %>%
+                                      ggplot(aes(x=bound,y=mean,fill=bound)) + 
+                                      geom_bar(stat="identity",position="dodge") + 
+                                      geom_errorbar(aes(ymin = YMin, ymax = YMax, width = .25)) +
+                                      scale_fill_brewer("bound", palette="Blues") +
+                                      ggtitle("Average weighted means by bound, n=689") +
+                                      scale_y_continuous(name="Expected Value") +
+                                      scale_x_discrete(name="Bound")
+
+d_raw_weighted_means_by_bound_plot
+
+ggsave(plot = d_raw_weighted_means_by_bound_plot, filename = "07_pilot_raw_weighted_means_by_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Plot weighted mean by participant for each bound, faceted by item:
+```{r}
+d_raw_weighted_means_by_item_bound_plot <- d_raw_weighted_means_42 %>%
+                                      group_by(bound, item) %>%
+                                      summarize(mean = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+                                      mutate(YMin = mean - CI.Low, YMax = mean + CI.High) %>%
+                                      ggplot(aes(x=bound,y=mean,fill=bound)) + 
+                                      geom_bar(stat="identity",position="dodge") + 
+                                      geom_errorbar(aes(ymin = YMin, ymax = YMax, width = .25)) +
+                                      facet_wrap(~item) + 
+                                      theme_bw() + 
+                                      scale_fill_brewer("bound", palette="Blues") +
+                                      ggtitle("Average weighted means by item and bound, n=689") +
+                                      scale_y_continuous(name="Expected Value") +
+                                      scale_x_discrete(name="Bound")
+
+d_raw_weighted_means_by_item_bound_plot
+
+ggsave(plot = d_raw_weighted_means_by_item_bound_plot, filename = "07_pilot_raw_weighted_means_by_item_bound.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Plot raw counts by bound, faceted by item, with mean and horizontal error bars:
+```{r}
+d_raw_weighted_means_by_item_43 <- d_raw_weighted_means_42 %>%
+              group_by(bound, item) %>%
+              summarize(value = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+              mutate(YMin = value - CI.Low, YMax = value + CI.High) %>%
+              ungroup() %>%
+              mutate(y=rep(c(.3, .35),each=4))
+
+raw_count_props_all_by_item_bound_wgtmeans_ci_plot <- ggplot() + 
+                                                      geom_bar(data = d_pivotedprops_item_bound_27, aes(x=as.numeric(value),y=prop,fill=bound), stat="identity",position="dodge") + 
+                                                      geom_errorbarh(data = d_raw_weighted_means_by_item_43,aes(xmin = YMin, xmax = YMax, y=y, height = .05)) +
+                                                      geom_point(data = d_raw_weighted_means_by_item_43, aes(x=value, y=y,fill=bound), shape = 21, color="black", size=2) +
+                                                      facet_wrap(~item) + 
+                                                      theme_bw() +
+                                                      scale_fill_brewer("bound") +
+                                                      ggtitle("Raw count proportion by item and bound with average weighted means, n=689") +
+                                                      scale_y_continuous(name="Proportion") +
+                                                      scale_x_discrete(name="Value",
+                                                                       limits=c(20:30))
+
+raw_count_props_all_by_item_bound_wgtmeans_ci_plot
+
+#ggsave(plot = raw_count_props_all_by_item_bound_wgtmeans_ci_plot, filename = "07_pilot_raw_count_props_all_by_item_bound_wgtmeans_ci.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Average weighted means as a function of bound and item, random effect of participant, non-centered bound:
+```{r}
+m_mean_bound_item = lmer(wgt_mean ~ bound*item + (1|workerid), data=d_raw_weighted_means_42)
+summary(m_mean_bound_item)
+```
+
+
+
+Visualize tri-category proportions by item and bound with confidence intervals:
+```{r}
+tri_cat_by_item_bound_ci <- d_pivotedprops_item_bound_27 %>%
+                            group_by(triCat,item,bound) %>% 
+                            summarize(sumProp = sum(prop)) %>% 
+                            mutate(mean = sumProp, CI.Low = ci.low(sumProp), CI.High = ci.high(sumProp)) %>%
+                                      mutate(YMin = mean - CI.Low, YMax = mean + CI.High) %>% ggplot(aes(x=triCat,y=sumProp,color=item,linetype=bound,shape=item,group=interaction(item,bound))) + 
+                            geom_point() + 
+                            geom_line() +
+                            geom_errorbar(aes(ymin = YMin, ymax = YMax, width = .15)) +
+                            ggtitle("Tri-category comparison by item and bound with confidence intervals, n=689") +
+                            scale_y_continuous(name="Proportion") +
+                            scale_x_discrete(name="Value",
+                              limits=c("below", "25", "above"))
+
+tri_cat_by_item_bound_ci
+ggsave(plot = tri_cat_by_item_bound_ci, filename = "07_pilot_tri_cat_by_item_bound_ci.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Pivoted means BY PARTICIPANT SKEW-BOUND:
+```{r}
+d_props_by_partskew_bound_44 <- d_raw_weighted_means_42 %>% 
+  mutate(bin_new_label = case_when(
+                part_bin_bva_four == "preferbelow" ~ "prefer below",
+                part_bin_bva_four == "preferequal" ~ "equal preference",
+                part_bin_bva_four == "preferabove" ~ "prefer above",
+                part_bin_bva_four == "preferneither" ~ "exact only"
+              )) %>%
+  group_by(bin_new_label,bound) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_by_partskew_bound_45 <- pivot_longer(d_props_by_partskew_bound_44, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_by_partskew_bound_45 <- d_pivotedprops_by_partskew_bound_45 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Plot raw counts by bound, faceted by participant skew, with mean and horizontal error bars:
+```{r}
+d_raw_weighted_means_by_bound_partskew_46 <- d_raw_weighted_means_42 %>%
+              mutate(bin_new_label = case_when(
+                part_bin_bva_four == "preferbelow" ~ "prefer below",
+                part_bin_bva_four == "preferequal" ~ "equal preference",
+                part_bin_bva_four == "preferabove" ~ "prefer above",
+                part_bin_bva_four == "preferneither" ~ "exact only"
+              )) %>%
+              group_by(bound, bin_new_label) %>%
+              summarize(value = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+              mutate(YMin = value - CI.Low, YMax = value + CI.High) %>%
+              ungroup() %>%
+              mutate(y=rep(c(.3, .35),each=4))
+
+raw_count_props_all_by_bound_partskew_wgtmeans_ci_plot <- ggplot() + 
+                                                      geom_bar(data = d_pivotedprops_by_partskew_bound_45, aes(x=as.numeric(value),y=prop,fill=bound), stat="identity",position="dodge") + 
+                                                      geom_errorbarh(data = d_raw_weighted_means_by_bound_partskew_46,aes(xmin = YMin, xmax = YMax, y=y, height = .05)) +
+                                                      geom_point(data = d_raw_weighted_means_by_bound_partskew_46, aes(x=value, y=y,fill=bound), shape = 21, color="black", size=1.5) +
+                                                      facet_wrap(~bin_new_label) + 
+                                                      theme_bw() +
+                                                      scale_fill_brewer("bound") +
+                                                      ggtitle("Raw count proportion by participant skew and bound with avg weighted means, n=689") +
+                                                      scale_y_continuous(name="Proportion") +
+                                                      scale_x_discrete(name="Value",
+                                                                       limits=c(20:30))
+
+raw_count_props_all_by_bound_partskew_wgtmeans_ci_plot
+
+ggsave(plot = raw_count_props_all_by_bound_partskew_wgtmeans_ci_plot, filename = "07_pilot_raw_count_props_all_by_bound_partskew_wgtmeans_ci_plot.pdf", width = 8, height = 5, units = "in")
+```
+
+Counts for each of the four categories above:
+```{r}
+exactonly_count <- d_raw_weighted_means_42 %>%
+  filter(part_bin_bva_four == "preferneither")
+
+prefbelow_count <- d_raw_weighted_means_42 %>%
+  filter(part_bin_bva_four == "preferbelow")
+
+prefabove_count <- d_raw_weighted_means_42 %>%
+  filter(part_bin_bva_four == "preferabove")
+
+prefabove_inupperboundarycontext_count <- d_raw_weighted_means_42 %>%
+  filter(part_bin_bva_four == "preferabove" & bound == "upper")
+
+prefequal_count <- d_raw_weighted_means_42 %>%
+  filter(part_bin_bva_four == "preferequal")
+```
+
+Exact only: 199
+Prefer below: 293
+Prefer above: 103
+Prefer equal: 94
+
+
+Pivoted means for all non-precise participants BY BOUND:
+```{r}
+d_props_nonprecise_by_bound_47 <- d_raw_weighted_means_42 %>% 
+  filter(part_bin != "ex") %>%
+  group_by(bound) %>% 
+  summarise("20" = mean(coin_a)/20,
+            "21" = mean(coin_b)/20,
+            "22" = mean(coin_c)/20,
+            "23" = mean(coin_d)/20,
+            "24" = mean(coin_e)/20,
+            "25" = mean(coin_f)/20,
+            "26" = mean(coin_g)/20,
+            "27" = mean(coin_h)/20,
+            "28" = mean(coin_i)/20,
+            "29" = mean(coin_j)/20,
+            "30" = mean(coin_k)/20
+  )
+
+d_pivotedprops_nonprecise_by_bound_48 <- pivot_longer(d_props_nonprecise_by_bound_47, cols = "20":"30", names_to = "value", values_to = "prop")
+
+lowerProps <- list("20","21","22","23","24")
+upperProps <- list("26","27","28","29","30")
+
+d_pivotedprops_nonprecise_by_bound_48 <- d_pivotedprops_nonprecise_by_bound_48 %>% 
+  mutate(triCat = case_when(
+    value %in% lowerProps ~ "below",
+    value %in% upperProps ~ "above",
+    value == "25" ~ "25"
+  ))
+```
+
+Plot raw counts by bound, for non-precise participants, with mean and horizontal error bars:
+```{r}
+d_raw_weighted_means_nonprecise_by_bound_49 <- d_raw_weighted_means_42 %>%
+              filter(part_bin != "ex") %>%
+              group_by(bound) %>%
+              summarize(value = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+              mutate(YMin = value - CI.Low, YMax = value + CI.High) %>%
+              ungroup() %>%
+              mutate(y=rep(c(.3, .35),each=1))
+
+raw_count_props_nonprecise_by_bound_wgtmeans_ci_plot <- ggplot() + 
+                                                      geom_bar(data = d_pivotedprops_nonprecise_by_bound_48, aes(x=as.numeric(value),y=prop,fill=bound), stat="identity",position="dodge") + 
+                                                      geom_errorbarh(data = d_raw_weighted_means_nonprecise_by_bound_49,aes(xmin = YMin, xmax = YMax, y=y, height = .05)) +
+                                                      geom_point(data = d_raw_weighted_means_nonprecise_by_bound_49, aes(x=value, y=y,fill=bound), shape = 21, color="black", size=2) +
+                                                      scale_fill_brewer("bound") +
+                                                      ggtitle("Raw count proportion by bound for non-precise participants with avg weighted means, n=487") +
+                                                      scale_y_continuous(name="Proportion") +
+                                                      scale_x_discrete(name="Value",
+                                                                       limits=c(20:30))
+
+raw_count_props_nonprecise_by_bound_wgtmeans_ci_plot
+
+ggsave(plot = raw_count_props_nonprecise_by_bound_wgtmeans_ci_plot, filename = "07_pilot_raw_count_props_nonprecise_by_bound_wgtmeans_ci.pdf", width = 8, height = 5, units = "in")
+```
+
+Average weighted means as a function of bound and item, random effect of participant, non-centered bound, for non-precise participants:
+```{r}
+d_raw_weighted_means_nonprecise_51 <- d_raw_weighted_means_42 %>%
+  filter(part_bin != "ex")
+
+m_mean_bound_item_nonprecise = lmer(wgt_mean ~ bound*item + (1|workerid), data=d_raw_weighted_means_nonprecise_51)
+summary(m_mean_bound_item_nonprecise)
+```
+
+
+
+Plot raw counts by bound, for all participants, with mean and horizontal error bars:
+```{r}
+d_raw_weighted_means_all_by_bound_50 <- d_raw_weighted_means_42 %>%
+              group_by(bound) %>%
+              summarize(value = mean(wgt_mean), CI.Low = ci.low(wgt_mean), CI.High = ci.high(wgt_mean)) %>%
+              mutate(YMin = value - CI.Low, YMax = value + CI.High) %>%
+              ungroup() %>%
+              mutate(y=rep(c(.3, .35),each=1))
+
+raw_count_props_all_by_bound_wgtmeans_ci_plot <- ggplot() + 
+                                                      geom_bar(data = d_pivotedprops_bound_31, aes(x=as.numeric(value),y=prop,fill=bound), stat="identity",position="dodge") + 
+                                                      geom_errorbarh(data = d_raw_weighted_means_all_by_bound_50,aes(xmin = YMin, xmax = YMax, y=y, height = .05)) +
+                                                      geom_point(data = d_raw_weighted_means_all_by_bound_50, aes(x=value, y=y,fill=bound), shape = 21, color="black", size=2) +
+                                                      scale_fill_brewer("bound") +
+                                                      ggtitle("Raw count proportion by bound for all participants with avg weighted means, n=689") +
+                                                      scale_y_continuous(name="Proportion") +
+                                                      scale_x_discrete(name="Value",
+                                                                       limits=c(20:30))
+
+raw_count_props_all_by_bound_wgtmeans_ci_plot
+
+ggsave(plot = raw_count_props_all_by_bound_wgtmeans_ci_plot, filename = "07_pilot_raw_count_props_all_by_bound_wgtmeans_ci.pdf", width = 8, height = 5, units = "in")
+```
+
+
+
+Average weighted means as a function of bound and item, random effect of participant, centered bound:
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+d_raw_weighted_means_boundcentered_52 <- d_raw_weighted_means_42 %>%
+  mutate(facBound = as.factor(bound)) %>%
+  mutate(numBound = as.numeric(facBound)) %>%
+  mutate(centBound = numBound - mean(numBound))
+
+m_mean_bound_item = lmer(wgt_mean ~ bound*item + (1|workerid), data=d_raw_weighted_means_42)
+summary(m_mean_bound_item)
+```
+
+
+
+R resources used in building these analyses:
+https://www.tutorialspoint.com/how-to-find-the-average-of-a-particular-column-in-r-data-frame
+https://www.datasciencemadesimple.com/get-mean-of-a-column-in-r-2/
+https://dplyr.tidyverse.org/reference/summarise_all.html
+https://dplyr.tidyverse.org/reference/across.html
+https://dplyr.tidyverse.org/reference/dplyr_tidy_select.html
+https://dplyr.tidyverse.org/reference/select.html
+https://tidyselect.r-lib.org/reference/faq-selection-context.html
+https://stackoverflow.com/questions/3991905/sum-rows-in-data-frame-or-matrix
+https://www.youtube.com/watch?v=FUOpsBTy_as
+https://tidyr.tidyverse.org/reference/gather.html
+https://www.tandfonline.com/doi/pdf/10.1198/016214505000000718#:~:text=The%20Poisson%20distribution%20is%20the,as%20fitting%20the%20Poisson%20distribution.
+https://en.wikipedia.org/wiki/Multinomial_distribution
+https://rpubs.com/eraldagjika/715261
+https://stat.ethz.ch/R-manual/R-devel/library/stats/html/Multinom.html
+https://stats.oarc.ucla.edu/r/dae/multinomial-logistic-regression/
+https://www.r-bloggers.com/2022/09/the-multinomial-distribution-in-r/
+https://stackoverflow.com/questions/30926390/how-to-use-select-for-multiple-fields-using-dplyr
+https://www.datasciencemadesimple.com/groupby-sum-in-r-2/
+https://stackoverflow.com/questions/19127384/what-is-a-regex-to-match-only-an-empty-string
+http://www.sthda.com/english/wiki/ggplot2-title-main-axis-and-legend-titles
+https://sparkbyexamples.com/r-programming/replace-string-with-another-string-in-r/
+https://github.com/rstudio/cheatsheets/blob/main/strings.pdf
+https://stackoverflow.com/questions/26548495/reorder-rows-using-custom-order
+http://www.sthda.com/english/wiki/ggplot2-line-plot-quick-start-guide-r-software-and-data-visualization
+https://www.statology.org/ggplot-order-x-axis/
+https://stackoverflow.com/questions/65065476/lines-not-appearing-in-ggplot
+https://stackoverflow.com/questions/40297206/overlaying-two-plots-using-ggplot2-in-r
+http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
+http://www.sthda.com/english/wiki/ggplot2-axis-ticks-a-guide-to-customize-tick-marks-and-labels#change-tick-mark-labels
+https://dplyr.tidyverse.org/reference/group_by.html
+https://ggplot2.tidyverse.org/articles/ggplot2-specs.html
+https://stackoverflow.com/questions/9968976/group-by-two-columns-in-ggplot2
+https://stackoverflow.com/questions/13482532/sum-cells-of-certain-columns-for-each-row
+https://www.statology.org/r-max-across-columns/
+https://r-graph-gallery.com/48-grouped-barplot-with-ggplot2
+https://stackoverflow.com/questions/51466449/argument-must-be-coercible-to-non-negative-integer-in-r
+
+
+
+
+
